@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding='ISO-8859-1'?>
+<visualdsp-project schema="17" name="Dining_Philosophers" file="DiningPhilosopher.dpj">
+	<!-- Project build target -->
+	<target>
+		<processor revision="Automatic">ADSP-BF533</processor>
+		<extension>.dxe</extension>
+		<type>Executable file</type>
+	</target>
+	<!-- Configurations -->
+	<configurations active="Debug">
+		<configuration name="Debug">
+			<intermediate-dir>.\Debug</intermediate-dir>
+			<output-dir>.\Debug</output-dir>
+			<changed-property-page-flags>0</changed-property-page-flags>
+			<tools>
+				<tool type="Compiler">
+					<option><![CDATA[|-Version>4.5|-O1>0|-Ov>100|-g>1|-no-multiline>1|-progress-rep-func>0|-progress-rep-gen-opt>0|-progress-rep-mc-opt>0|-double-size-32>1|-double-size-any>0|-decls-strong>1|-jump-constdata>1|-flags-compiler --diag_warning,implicit_func_decl>1|AdditionalOptions>-threads]]></option>
+				</tool>
+				<tool type="Assembler">
+					<option><![CDATA[|-Version>4.5|-g>1]]></option>
+				</tool>
+				<tool type="Linker">
+					<option><![CDATA[|-Version>4.5|-map>1|-jcs2l>1|NOSWITCH>1]]></option>
+				</tool>
+				<tool type="Archiver">
+					<option><![CDATA[]]></option>
+				</tool>
+				<tool type="Loader">
+					<option><![CDATA[|-Version>4.5|-PrevProc >ADSP-BF533|-b Flash>1|-f HEX>1|-Width 8>1|-p>0x0|-waits >15|-BaudRate 500k>1|-HoldTime >3|-pFlag >0|-No2Kernel>1|-kb Flash>1|-kf HEX>1|-kWidth 8>1|-kp>0x0|UserKernel>1|split HEX>1|-maskaddr>29]]></option>
+				</tool>
+				<tool type="VdkGen">
+					<option><![CDATA[]]></option>
+				</tool>
+			</tools>
+		</configuration>
+		<configuration name="Release">
+			<intermediate-dir>.\Release</intermediate-dir>
+			<output-dir>.\Release</output-dir>
+			<changed-property-page-flags>0</changed-property-page-flags>
+			<tools>
+				<tool type="Compiler">
+					<option><![CDATA[|-Version>4.5|-O1>1|-Ov>100|-ipa>1|-g>0|-no-annotate>1|-no-multiline>1|-structs-do-not-overlap>1|-progress-rep-func>0|-progress-rep-gen-opt>0|-progress-rep-mc-opt>0|-double-size-32>1|-double-size-any>0|-decls-strong>1|-jump-constdata>1|-flags-compiler --diag_warning,implicit_func_decl>1|AdditionalOptions>-threads]]></option>
+				</tool>
+				<tool type="Assembler">
+					<option><![CDATA[|-Version>4.5|-g>0]]></option>
+				</tool>
+				<tool type="Linker">
+					<option><![CDATA[|-Version>4.5|-flags-link -e>1|-jcs2l>1|NOSWITCH>1]]></option>
+				</tool>
+				<tool type="Archiver">
+					<option><![CDATA[]]></option>
+				</tool>
+				<tool type="Loader">
+					<option><![CDATA[|-Version>4.5|-PrevProc >ADSP-BF533|-b Flash>1|-f HEX>1|-Width 8>1|-p>0x0|-waits >15|-BaudRate 500k>1|-HoldTime >3|-pFlag >0|-No2Kernel>0|-kb Flash>1|-kf HEX>1|-kWidth 8>1|-kp>0x0|DefaultKernelStart>1|UserKernel>1|split HEX>1|-maskaddr>29]]></option>
+				</tool>
+				<tool type="VdkGen">
+					<option><![CDATA[]]></option>
+				</tool>
+			</tools>
+		</configuration>
+	</configurations>
+	<!-- Project folders -->
+	<folders>
+		<folder name="Header Files" ext=".h,.hpp,.hxx">
+			<files>
+				<file name=".\PhilosopherThread.h">
+				</file>
+			</files>
+		</folder>
+		<folder name="Kernel Files" ext=".vdk">
+			<files>
+				<file name=".\DiningPhilosopher.vdk">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\VDK.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\VDK.h">
+				</file>
+			</files>
+		</folder>
+		<folder name="Linker Files" ext=".ldf,.dlb">
+			<files>
+				<file name=".\vdk-BF533.ldf">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+			</files>
+		</folder>
+		<folder name="Source Files" ext=".c,.cpp,.cxx,.asm,.dsp">
+			<files>
+				<file name=".\ExceptionHandler-BF533.asm">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\PhilosopherThread.c">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+			</files>
+		</folder>
+	</folders>
+	<!-- Files under root directly -->
+	<files>
+		<file name=".\readme.txt">
+		</file>
+	</files>
+</visualdsp-project>

@@ -1,0 +1,404 @@
+/*
+** Default LDF for a VDK project on the ADSP-BF592-A.
+** 
+** There are configuration options that can be specified either by compiler
+** flags, or by linker flags directly. These options are:
+**
+** __WORKAROUNDS_ENABLED
+**      Defined by compiler when -workaround is used to direct LDF to
+**      link with libraries that have been built with work-arounds enabled.
+** USE_SCRATCHPAD_STACK
+**   Use scratchpad for system stack. Note only 4k memory.
+** USE_SCRATCHPAD_HEAP
+**   Use scratchpad for dynamic heap allocation. Note only 4k memory.
+** _ADI_SOV_DETECTION
+**   Macro defined when stack overflow detection is enabled, causes the _SOV
+**   version of TMK  to be linked in, context switching the variable that
+**   determines the stack location. This is not available when the utility
+**   ROM is selected.
+** USER_CRT
+**   Specifies a custom or System Builder generated CRT startup object to use.
+** USER_CPLBTAB
+**   Specifies a custom or System Builder generated CPLB configuration
+**   definition.
+** IEEEFP
+**   Defined by the compiler when switch -ieee-fp is used to direct the
+**   use of slower but more IEEE conformant floating-point emulation.
+** _ADI_FX_LIBIO
+**   Defined by the compiler when switch -embedded-io is used to direct the
+**   use of libio with support for embedded C conversion specifiers.
+** _DINKUM_IO
+**   Use dinkum io library (slower but more compatible). Enabled
+**   by the flag -full-io
+** __MEMINIT__
+**   Macro defined by the linker when -meminit is used to enable runtime
+**   initialization.
+** NO_UTILITY_ROM
+**   By default, the LDF will link against the contents of the Utility ROM. 
+**   If the macro NO_UTILITY_ROM is defined (for example via -flags-link 
+** -MDNO_UTILITY_ROM) then the LDF will ignore the Utility ROM.
+*/
+
+// Setup the architecture
+ARCHITECTURE(ADSP-BF592-A)
+
+// Setup the search directories
+SEARCH_DIR( $ADI_DSP/BLACKFIN/lib )
+
+/* definitions related to the placement of heap and stack */
+
+// our default stack size is small so it can fit in scratchpad leaving space
+// for other things in other memory areas
+#if !defined (USE_L1_DATA_STACK)
+#define USE_SCRATCHPAD_STACK
+#endif
+
+#ifndef USE_L1_DATA_STACK
+#define USE_L1_DATA_STACK (!defined(USE_SCRATCHPAD_STACK) )
+#endif
+
+#ifndef USE_L1_DATA_HEAP
+#define USE_L1_DATA_HEAP  (!defined(USE_SCRATCHPAD_HEAP) )
+#endif
+
+/* The ROM will be used by default for all silicon revisions other than none,
+ * any and 0.0 which never use the ROM. 
+ * The macro NO_UTILITY_ROM indicates that the ROM is not used.
+ * Silicon revisions none and any give a warning if NO_UTILITY_ROM 
+ * is not defined because the desired behaviour is unclear.
+ */
+
+#if !defined(NO_UTILITY_ROM)
+
+#if !defined(__SILICON_REVISION__) || (__SILICON_REVISION__==0xffff)
+#warning \
+ The Tools Utility ROM will not be used to link this application because\
+ the silicon revision does not specify a specific revision number.\
+ This message may be suppressed by defining the LDF macro NO_UTILITY_ROM.
+#elif __SILICON_REVISION__ != 0  
+    #define USE_UTILITY_ROM
+#endif
+
+#endif
+
+#if defined (USE_UTILITY_ROM) && defined (_ADI_SOV_DETECTION)
+#warning \
+ The Stack Overflow detection functionality cannot be used with the Tools \
+ Utility ROM. Selecting stack overflow detection with the Tools Utility ROM\
+ will result in the application going into Kernel Panic.
+#endif
+
+// minimum sizes of the stack and heap allocated
+#define STACK_SIZE 1K
+#define HEAP_SIZE 11K
+#define STACKHEAP_SIZE 12K
+
+// Include the VDK preprocessor macros
+#define VDK_LDF_
+#include "VDK.h"
+
+// Setup the VDK library preprocessor macros
+#if VDK_INSTRUMENTATION_LEVEL_==2
+#define VDK_IFLAG_ i
+#elif VDK_INSTRUMENTATION_LEVEL_==1
+#define VDK_IFLAG_ e
+#else
+#define VDK_IFLAG_ n
+#endif
+
+  #define VDK_LIB_NAME_MACRO_(x) vdk- ## x ## -BF532.dlb
+  #define VDK_LIB_NAME_(x) VDK_LIB_NAME_MACRO_(x)
+#ifdef __WORKAROUNDS_ENABLED
+    #define RT_LIB_NAME(x) lib ## x ## y.dlb
+    #define RT_LIB_NAME_MT(x) lib ## x ## mty.dlb
+    #define RT_OBJ_NAME(x) x ## y.doj
+    #define RT_OBJ_NAME_MT(x) x ## mty.doj
+  #ifdef __ADI_LIBEH__
+    #define RT_LIB_NAME_EH(x) lib ## x ## yx.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mtyx.dlb
+  #else /* __ADI_LIBEH__ */
+    #define RT_LIB_NAME_EH(x) lib ## x ## y.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mty.dlb
+  #endif
+#else /* __WORKAROUNDS_ENABLED */
+    #define RT_LIB_NAME(x) lib ## x ## .dlb
+    #define RT_LIB_NAME_MT(x) lib ## x ## mt.dlb
+    #define RT_OBJ_NAME(x) x ## .doj
+    #define RT_OBJ_NAME_MT(x) x ## mt.doj
+  #ifdef __ADI_LIBEH__
+    #define RT_LIB_NAME_EH(x) lib ## x ## x.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mtx.dlb
+  #else /* __ADI_LIBEH__ */
+    #define RT_LIB_NAME_EH(x) lib ## x ## .dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mt.dlb
+  #endif
+#endif /* __WORKAROUNDS_ENABLED */
+
+#ifdef USER_CRT 
+  #define CRT USER_CRT
+#else
+  #define CRT RT_OBJ_NAME_MT(crtsfc532)
+#endif
+
+#if defined(USER_CPLBTAB)
+   #define CPLBTAB USER_CPLBTAB 
+#else
+   #define CPLBTAB cplbtab592-a.doj
+#endif
+
+#define MEMINIT __initsbsz532.doj
+
+$RTL_LIBRARIES = 
+   RT_LIB_NAME_MT(small532)
+   ,MEMINIT
+#if defined(_DINKUM_IO)
+   ,RT_LIB_NAME_MT(c532)         /* ANSI C (and IO) run-time library */
+   ,RT_LIB_NAME_MT(io532)        /* Fast IO and host IO support      */
+#else
+#if defined(_ADI_FX_LIBIO)
+   ,RT_LIB_NAME_MT(iofx532)      /* Fast IO and host IO with         */
+                                 /* embedded C support               */
+#else
+   ,RT_LIB_NAME_MT(io532)        /* Fast IO and host IO support      */
+#endif
+   ,RT_LIB_NAME_MT(c532)         /* ANSI C (and IO) run-time library */
+#endif
+#if defined(USE_FILEIO) 
+   ,RT_LIB_NAME_MT(rt_fileio532)    /* Run-time Support with File IO    */
+#else
+   ,RT_LIB_NAME_MT(rt532)           /* Run-time Support without File IO */
+#endif
+   ,RT_LIB_NAME_MT(event532)
+   ,RT_LIB_NAME_EH_MT(cpp532)
+#if defined(IEEEFP)
+   ,RT_LIB_NAME(sftflt532)    /* IEEE floating-point emulation    */
+#endif
+   ,RT_LIB_NAME(f64ieee532)   /* 64-bit floating-point support    */
+   ,RT_LIB_NAME(dsp532)       /* DSP run-time library             */
+#if !defined(IEEEFP)
+   ,RT_LIB_NAME(sftflt532)    /* IEEE floating-point emulation    */
+#endif
+   ,RT_LIB_NAME(etsi532)
+   ,RT_LIB_NAME(osal532_vdk)
+   ,RT_LIB_NAME(ssl592-a_vdk)   /* system services library */
+   ,RT_LIB_NAME(drv592-a)       /* device drivers */
+   ,RT_OBJ_NAME_MT(idle532)
+   ,RT_LIB_NAME_MT(rt_fileio532)
+   ;
+
+$BASE_LIBRARIES = $RTL_LIBRARIES;
+
+$LIBRARIES = 
+#if !defined (USE_UTILITY_ROM)
+  #ifdef _ADI_SOV_DETECTION
+     TMK-BF532_sov.dlb, 
+  #else
+      TMK-BF532.dlb, 
+  #endif
+#else
+    TMK-BF532_ROM_DEF.dlb,
+#endif
+    VDK_LIB_NAME_(CORE), 
+    VDK_LIB_NAME_(VDK_IFLAG_), 
+    $BASE_LIBRARIES;
+
+$OBJECTS = 
+    CRT, 
+    $COMMAND_LINE_OBJECTS, 
+#if defined (USE_UTILITY_ROM)
+    romdata-BF592-A-TMK.doj,
+#endif
+    CPLBTAB, 
+    RT_OBJ_NAME_MT(crtn532);
+
+/*
+** Memory map.
+**
+** 0xFFE00000 - 0xFFFFFFFF  Core MMR registers (2MB)
+** 0xFFC00000 - 0xFFDFFFFF  System MMR registers (2MB)
+** 0xFFB01000 - 0xFFBFFFFF  Reserved
+** 0xFFB00000 - 0xFFB00FFF  Scratchpad SRAM (4K)
+** 0xFFA20000 - 0xFFAFFFFF  Reserved
+** 0xFFA10000 - 0xFFA1FFFF  L1 Instruction ROM (64K)
+** 0xFFA08000 - 0xFFA0FFFF  Reserved
+** 0xFFA00000 - 0xFFA07FFF  L1 Instruction SRAM (32K)
+** 0xFF808000 - 0xFF9FFFFF  Reserved
+** 0xFF800000 - 0xFF807FFF  L1 Data SRAM (32K)
+** 0xEF001000 - 0xFF7FFFFF  Reserved
+** 0xEF000000 - 0xEF000FFF  Boot ROM (4K)
+** 0x00000000 - 0xEEFFFFFF  Reserved
+**
+** Notes:
+** 0xFF807FEF-0xFF807FFF Required by boot-loader.
+*/
+
+MEMORY
+{
+    MEM_L1_SCRATCH  { TYPE(RAM) START(0xFFB00000) END(0xFFB00FFF) WIDTH(8) }
+    MEM_L1_CODE     { TYPE(RAM) START(0xFFA00000) END(0xFFA07FFF) WIDTH(8) }
+    MEM_L1_DATA     { TYPE(RAM) START(0xFF800000) END(0xFF807FFF) WIDTH(8) }
+}
+
+
+PROCESSOR p0
+{
+   OUTPUT( $COMMAND_LINE_OUTPUT_FILE )
+   RESOLVE(start,0xFFA00000)
+   KEEP(start,_main)
+   KEEP(_kMaxNumThreads__3VDK)
+   KEEP(_kMaxNumActiveSemaphores__3VDK)
+   KEEP(_g_Sem_ThreadBaseOffset__3VDK)
+   KEEP(_kMaxNumActiveDevFlags__3VDK)
+   KEEP(_kMaxNumActiveMessages__3VDK)
+   KEEP(_kMaxNumActiveMemoryPools__3VDK)
+   KEEP(_kNumEvents__3VDK)
+   KEEP(_kNumEventBits__3VDK)
+
+#if defined (USE_UTILITY_ROM)
+   #include "ADSP-BF592-A-LDF.h"
+#endif
+
+    SECTIONS
+    {
+#if defined(__WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES) /* { */
+    /* Workaround for hardware errata 05-00-0189 and 05-00-0310 -
+    ** "Speculative (and fetches made at boundary of reserved memory
+    ** space) for instruction or data fetches may cause false
+    ** protection exceptions" and "False hardware errors caused by
+    ** fetches at the boundary of reserved memory ".
+    **
+    ** Done by avoiding use of 76 bytes from at the end of blocks
+    ** that are adjacent to reserved memory. Workaround is enabled
+    ** for appropriate silicon revisions (-si-revision switch).
+    */
+    RESERVE(___wab0=0xFFB00FFF - 75,___l0=76) /* Scratchpad          */
+    RESERVE(___wab1=0xFFA07FFF - 75,___l1=76) /* L1 Instruction SRAM */
+    RESERVE(___wab2=0xFF807FFF - 75,___l2=76) /* L1 Data SRAM        */
+#endif /*} __WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES */
+
+/*
+** reserve 0xFF807FEF-0xFF807FFF required by boot-loader.
+*/
+#if !defined(__WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES) 
+    RESERVE(___bldr1=0xFF807FEF,___bldr1l=17)
+#endif
+
+    L1_scratchpad NO_INIT
+    {
+       INPUT_SECTION_ALIGN(4)
+       INPUT_SECTIONS($OBJECTS(L1_scratchpad) $LIBRARIES(L1_scratchpad))
+    } > MEM_L1_SCRATCH 
+
+#if defined(USE_SCRATCHPAD_STACK) || defined(USE_SCRATCHPAD_HEAP)
+    stack_and_heap_scratchpad
+    {
+       INPUT_SECTION_ALIGN(4)
+       RESERVE(stack_and_heap_in_scratchpad, stack_and_heap_in_scratchpad_length,4)
+#if defined(USE_SCRATCHPAD_STACK) && defined(USE_SCRATCHPAD_HEAP)
+       ldf_stack_space = stack_and_heap_in_scratchpad;
+       ldf_stack_end = (ldf_stack_space + ((stack_and_heap_in_scratchpad_length *STACK_SIZE) / STACKHEAP_SIZE) - 4 ) & 0xfffffffc;
+       ldf_heap_space = ldf_stack_end + 4;
+       ldf_heap_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+       ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_SCRATCHPAD_STACK)
+       ldf_stack_space = stack_and_heap_in_scratchpad;
+       ldf_stack_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+#elif defined(USE_SCRATCHPAD_HEAP)
+       ldf_heap_space = stack_and_heap_in_scratchpad;
+       ldf_heap_end = ldf_heap_space + stack_and_heap_in_scratchpad_length;
+       ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+    } > MEM_L1_SCRATCH
+#endif
+
+    l1_code
+    {
+        INPUT_SECTION_ALIGN(4)
+        ___l1_code_cache = 0;
+        INPUT_SECTIONS( $LIBRARIES(VDK_ISR_code) )
+        INPUT_SECTIONS( $OBJECTS(noncache_code) $LIBRARIES(noncache_code))
+        INPUT_SECTIONS( $OBJECTS(L1_code) $LIBRARIES(L1_code))
+        INPUT_SECTIONS( $OBJECTS(cplb_code) $LIBRARIES(cplb_code))
+        INPUT_SECTIONS( $OBJECTS(cplb) $LIBRARIES(cplb))
+        INPUT_SECTIONS( $OBJECTS(program) $LIBRARIES(program))
+    } >MEM_L1_CODE
+
+    data_L1_data
+    {
+        INPUT_SECTION_ALIGN(4)
+        ___l1_data_cache_a = 0;
+        ___l1_data_cache_b = 0;
+        INPUT_SECTIONS( $OBJECTS(L1_data_a) $LIBRARIES(L1_data_a))
+        INPUT_SECTIONS( $OBJECTS(L1_data) $LIBRARIES(L1_data))
+#if defined(__MEMINIT__) 
+        INPUT_SECTIONS( $OBJECTS(bsz_init) $LIBRARIES(bsz_init))
+#endif
+#if USE_L1_DATA_HEAP && USE_L1_DATA_STACK
+        RESERVE(stack_and_heap_in_L1_data, stack_and_heap_in_L1_data_length = STACKHEAP_SIZE,4)
+#elif USE_L1_DATA_HEAP 
+        RESERVE(stack_and_heap_in_L1_data, stack_and_heap_in_L1_data_length = HEAP_SIZE,4)
+#elif USE_L1_DATA_STACK
+        RESERVE(stack_and_heap_in_L1_data, stack_and_heap_in_L1_data_length = STACK_SIZE,4)
+#endif
+    } >MEM_L1_DATA
+
+    bsz_L1_data ZERO_INIT
+    {
+        INPUT_SECTION_ALIGN(4)
+        INPUT_SECTIONS( $OBJECTS(L1_bsz) $LIBRARIES(L1_bsz))
+        INPUT_SECTIONS( $OBJECTS(bsz) $LIBRARIES(bsz))
+    } >MEM_L1_DATA
+
+    data_L1_data_tables
+    {
+        INPUT_SECTION_ALIGN(4)
+        FORCE_CONTIGUITY
+        INPUT_SECTIONS( $OBJECTS(ctor) $LIBRARIES(ctor) )
+        INPUT_SECTIONS( $OBJECTS(ctorl) $LIBRARIES(ctorl) )
+        INPUT_SECTIONS( $OBJECTS(.gdt) $LIBRARIES(.gdt) )
+        INPUT_SECTIONS( $OBJECTS(.gdtl) $LIBRARIES(.gdtl) )
+    } >MEM_L1_DATA
+
+    l1_data_1
+    {
+        INPUT_SECTION_ALIGN(4)
+        INPUT_SECTIONS($OBJECTS(constdata) $LIBRARIES(constdata))
+        INPUT_SECTIONS($OBJECTS(voldata) $LIBRARIES(voldata))
+        INPUT_SECTIONS($OBJECTS(data1) $LIBRARIES(data1))
+        INPUT_SECTIONS( $OBJECTS(.rtti) $LIBRARIES(.rtti) )
+        INPUT_SECTIONS( $OBJECTS(.edt) $LIBRARIES(.edt) )
+        INPUT_SECTIONS( $OBJECTS(.cht) $LIBRARIES(.cht) )
+        INPUT_SECTIONS( $OBJECTS(vtbl) $LIBRARIES(vtbl) )
+        INPUT_SECTIONS( $OBJECTS(cplb_data) $LIBRARIES(cplb_data))
+    } >MEM_L1_DATA
+
+#if defined(__MEMINIT__)
+    .meminit { ALIGN(4) } >MEM_L1_DATA
+#endif
+
+#if USE_L1_DATA_STACK || USE_L1_DATA_HEAP
+    stack_and_heap_L1_data
+    {
+       INPUT_SECTION_ALIGN(4)
+#if !defined(__MEMINIT__) 
+       RESERVE_EXPAND(stack_and_heap_in_L1_data, stack_and_heap_in_L1_data_length,0,4)
+#endif
+#if USE_L1_DATA_STACK && USE_L1_DATA_HEAP
+       ldf_stack_space = stack_and_heap_in_L1_data;
+       ldf_stack_end = (ldf_stack_space + (stack_and_heap_in_L1_data_length * STACK_SIZE)/ STACKHEAP_SIZE - 4 ) & 0xfffffffc;
+       ldf_heap_space = ldf_stack_end + 4;
+       ldf_heap_end = ldf_stack_space + stack_and_heap_in_L1_data_length;
+       ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif USE_L1_DATA_STACK
+       ldf_stack_space = stack_and_heap_in_L1_data;
+       ldf_stack_end = ldf_stack_space + stack_and_heap_in_L1_data_length;
+#elif USE_L1_DATA_HEAP
+       ldf_heap_space = stack_and_heap_in_L1_data;
+       ldf_heap_end = ldf_heap_space + stack_and_heap_in_L1_data_length;
+       ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+    } > MEM_L1_DATA
+#endif
+
+}
+}

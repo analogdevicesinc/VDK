@@ -1,0 +1,115 @@
+[Version]
+VdkFileVersion=4.0
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=200
+System.Tick Period (ms)=0.25
+System.History Buffer Size=256
+System.Maximum Running Threads=10
+System.Instrumentation Level=Full Instrumentation
+System.Timer Interrupt=TMZHI
+System.Maximum Active Memory Pools=0
+System.Maximum Active Semaphores=0
+System.Maximum Messages=0
+System.Maximum Active Device Flags=4
+System.Maximum I/O Objects=1
+System.Semaphores Heap=system_heap
+System.Device Flags Heap=system_heap
+System.Messages Heap=system_heap
+System.I/O Objects Heap=system_heap
+System.Number of Nodes=1
+[Idle Thread]
+Count=2
+IdleThread0.System Defined=true
+IdleThread0.Name=IdleThread
+IdleThread0.Stack Size=256
+IdleThread0.Heap=system_heap
+IdleThread1.System Defined=true
+IdleThread1.Name=IdleThread
+IdleThread1.Stack Size=256
+IdleThread1.Heap=system_heap
+[Thread Types]
+Count=2
+ThreadType0.System Defined=false
+ThreadType0.Name=thread1
+ThreadType0.Priority=5
+ThreadType0.Stack Size=255
+ThreadType0.Message Enabled=false
+ThreadType0.Context Heap=system_heap
+ThreadType0.Stack Heap=system_heap
+ThreadType0.Thread Structure Heap=system_heap
+ThreadType0.Source File=thread1.cpp
+ThreadType0.Header File=thread1.h
+ThreadType1.System Defined=false
+ThreadType1.Name=thread2
+ThreadType1.Priority=5
+ThreadType1.Stack Size=1024
+ThreadType1.Message Enabled=false
+ThreadType1.Context Heap=system_heap
+ThreadType1.Stack Heap=system_heap
+ThreadType1.Thread Structure Heap=system_heap
+ThreadType1.Source File=thread2.cpp
+ThreadType1.Header File=thread2.h
+[Boot Threads]
+Count=2
+BootThread0.System Defined=false
+BootThread0.Name=boot_thread1
+BootThread0.Thread Type=thread1
+BootThread0.Initializer=0
+BootThread1.System Defined=false
+BootThread1.Name=boot_thread2
+BootThread1.Thread Type=thread2
+BootThread1.Initializer=0
+[Priorities]
+Count=0
+[Semaphores]
+Count=0
+[Events]
+Count=0
+[Event Bits]
+Count=0
+[Interrupts]
+Count=0
+[Device Drivers]
+Count=1
+DeviceDriver0.System Defined=false
+DeviceDriver0.Name=IPC
+DeviceDriver0.Source File=IPC.cpp
+DeviceDriver0.Header File=IPC.h
+[I/O Objects]
+Count=1
+IOObject0.System Defined=false
+IOObject0.Name=IPC_Device
+IOObject0.Template=IPC
+IOObject0.Initializer=0
+[Device Flags]
+Count=4
+DeviceFlag0.System Defined=false
+DeviceFlag0.Name=IPC_ch1
+DeviceFlag1.System Defined=false
+DeviceFlag1.Name=IPC_ch2
+DeviceFlag2.System Defined=false
+DeviceFlag2.Name=IPC_ch3
+DeviceFlag3.System Defined=false
+DeviceFlag3.Name=IPC_ch4
+[Memory Pools]
+Count=0
+[Multiprocessor Info]
+Count=1
+MultiProcInfo0.System Defined=true
+MultiProcInfo0.Name=MultiprocessorInfo
+MultiProcInfo0.Multiprocessor Messages Allowed=false
+MultiProcInfo0.Local Processor ID=0
+[Marshalled Message Types]
+Count=0
+[Imports]
+Count=0
+[Routing Threads]
+Count=0
+[Routing Nodes]
+Count=1
+RoutingNode0.System Defined=true
+RoutingNode0.Name=RoutingNode0
+RoutingNode0.Routing Thread=0
+[Heaps]
+Count=0

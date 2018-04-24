@@ -1,0 +1,156 @@
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=200
+System.Tick Period (ms)=.25
+System.History Buffer Size=256
+System.Maximum Running Threads=10
+System.Instrumentation Level=Full Instrumentation
+System.Maximum Active Memory Pools=0
+System.Maximum Active Semaphores=10
+System.Maximum Messages=0
+System.Maximum Active Device Flags=0
+System.Maximum I/O Objects=20
+System.Timer Interrupt=TMZHI
+System.Semaphores Heap=system_heap
+System.I/O Objects Heap=system_heap
+System.Device Flags Heap=system_heap
+System.Messages Heap=system_heap
+[Multiprocessor Info]
+MultiProcInfo0.Name=MultiprocessorInfo
+MultiProcInfo0.Multiprocessor Messages Allowed=false
+MultiProcInfo0.Local Processor ID=0
+[Routing Threads]
+Count=0
+[Routing Nodes]
+Count=0
+[Marshalled Message Types]
+Count=0
+[Imports]
+Count=0
+[Thread Types]
+Count=2
+ThreadType0.System Defined=false
+ThreadType0.Name=SystemStartThread
+ThreadType0.Priority=10
+ThreadType0.Stack Size=300
+ThreadType0.Source File=SystemStartThread.c
+ThreadType0.Header File=SystemStartThread.h
+ThreadType0.Message Enabled=false
+ThreadType0.Context Heap=system_heap
+ThreadType0.Stack Heap=system_heap
+ThreadType0.Thread Structure Heap=system_heap
+ThreadType1.System Defined=false
+ThreadType1.Name=PhilosopherThread
+ThreadType1.Priority=5
+ThreadType1.Stack Size=300
+ThreadType1.Source File=PhilosopherThread.c
+ThreadType1.Header File=PhilosopherThread.h
+ThreadType1.Message Enabled=false
+ThreadType1.Context Heap=system_heap
+ThreadType1.Stack Heap=system_heap
+ThreadType1.Thread Structure Heap=system_heap
+[Boot Threads]
+Count=1
+BootThread0.System Defined=false
+BootThread0.Name=BootSystemStartThread
+BootThread0.Thread Type=SystemStartThread
+BootThread0.Initializer=0
+[Idle Thread]
+Count=1
+IdleThread0.Name=idle
+IdleThread0.Stack Size=256
+IdleThread0.Heap=system_heap
+[Heaps]
+Count=0
+[Priorities]
+Count=0
+[Semaphores]
+Count=6
+Semaphore0.System Defined=false
+Semaphore0.Name=ChopStick1
+Semaphore0.Initial Value=1
+Semaphore0.Max Count=UINT_MAX
+Semaphore0.Initial Delay=0
+Semaphore0.Period=0
+Semaphore1.System Defined=false
+Semaphore1.Name=ChopStick2
+Semaphore1.Initial Value=1
+Semaphore1.Max Count=UINT_MAX
+Semaphore1.Initial Delay=0
+Semaphore1.Period=0
+Semaphore2.System Defined=false
+Semaphore2.Name=ChopStick3
+Semaphore2.Initial Value=1
+Semaphore2.Max Count=UINT_MAX
+Semaphore2.Initial Delay=0
+Semaphore2.Period=0
+Semaphore3.System Defined=false
+Semaphore3.Name=ChopStick4
+Semaphore3.Initial Value=1
+Semaphore3.Max Count=UINT_MAX
+Semaphore3.Initial Delay=0
+Semaphore3.Period=0
+Semaphore4.System Defined=false
+Semaphore4.Name=ChopStick5
+Semaphore4.Initial Value=1
+Semaphore4.Max Count=UINT_MAX
+Semaphore4.Initial Delay=0
+Semaphore4.Period=0
+Semaphore5.System Defined=false
+Semaphore5.Name=AllDone
+Semaphore5.Initial Value=0
+Semaphore5.Max Count=UINT_MAX
+Semaphore5.Initial Delay=0
+Semaphore5.Period=0
+[Events]
+Count=2
+Event0.System Defined=false
+Event0.Name=AllPhilosophersFull
+Event0.Type=All
+Event0.NumBits=5
+Event0.Bit0.Name=Philosopher1Full
+Event0.Bit0.Value=1
+Event0.Bit1.Name=Philosopher2Full
+Event0.Bit1.Value=1
+Event0.Bit2.Name=Philosopher3Full
+Event0.Bit2.Value=1
+Event0.Bit3.Name=Philosopher4Full
+Event0.Bit3.Value=1
+Event0.Bit4.Name=Philosopher5Full
+Event0.Bit4.Value=1
+Event1.System Defined=false
+Event1.Name=StartNow
+Event1.Type=All
+Event1.NumBits=1
+Event1.Bit0.Name=StartEating
+Event1.Bit0.Value=1
+[Event Bits]
+Count=6
+EventBit0.System Defined=false
+EventBit0.Name=Philosopher1Full
+EventBit0.Initial Value=0
+EventBit1.System Defined=false
+EventBit1.Name=Philosopher2Full
+EventBit1.Initial Value=0
+EventBit2.System Defined=false
+EventBit2.Name=Philosopher3Full
+EventBit2.Initial Value=0
+EventBit3.System Defined=false
+EventBit3.Name=Philosopher4Full
+EventBit3.Initial Value=0
+EventBit4.System Defined=false
+EventBit4.Name=Philosopher5Full
+EventBit4.Initial Value=0
+EventBit5.System Defined=false
+EventBit5.Name=StartEating
+EventBit5.Initial Value=0
+[Interrupts]
+Count=0
+[Device Drivers]
+Count=0
+[I/O Objects]
+Count=0
+[Device Flags]
+Count=0
+[Memory Pools]
+Count=0

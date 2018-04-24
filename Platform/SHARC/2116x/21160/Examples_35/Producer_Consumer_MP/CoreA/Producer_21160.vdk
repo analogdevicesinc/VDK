@@ -1,0 +1,164 @@
+[Version]
+VdkFileVersion=4.0
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=60
+System.Tick Period (ms)=1
+System.History Buffer Size=256
+System.Maximum Running Threads=10
+System.Instrumentation Level=Full Instrumentation
+System.Timer Interrupt=TMZHI
+System.Maximum Active Memory Pools=0
+System.Maximum Active Semaphores=0
+System.Maximum Messages=10
+System.Maximum Active Device Flags=6
+System.Maximum I/O Objects=6
+System.Semaphores Heap=system_heap
+System.Device Flags Heap=system_heap
+System.Messages Heap=system_heap
+System.I/O Objects Heap=system_heap
+System.Number of Nodes=2
+[Idle Thread]
+Count=1
+IdleThread0.System Defined=true
+IdleThread0.Name=IdleThread
+IdleThread0.Stack Size=256
+IdleThread0.Heap=system_heap
+[Thread Types]
+Count=1
+ThreadType0.System Defined=false
+ThreadType0.Name=Producer
+ThreadType0.Priority=5
+ThreadType0.Stack Size=255
+ThreadType0.Message Enabled=true
+ThreadType0.Thread Structure Heap=system_heap
+ThreadType0.Context Heap=system_heap
+ThreadType0.Stack Heap=system_heap
+ThreadType0.Source File=Producer.cpp
+ThreadType0.Header File=Producer.h
+[Boot Threads]
+Count=1
+BootThread0.System Defined=false
+BootThread0.Name=Producer1
+BootThread0.Thread Type=Producer
+BootThread0.Initializer=0
+[Priorities]
+Count=0
+[Semaphores]
+Count=0
+[Events]
+Count=0
+[Event Bits]
+Count=0
+[Interrupts]
+Count=6
+ISR0.System Defined=false
+ISR0.Name=LP0I
+ISR0.Enabled at Boot=false
+ISR0.Entry Point=LP0I_Entry
+ISR0.Source File=LP0I.asm
+ISR1.System Defined=false
+ISR1.Name=LP1I
+ISR1.Enabled at Boot=false
+ISR1.Entry Point=LP1I_Entry
+ISR1.Source File=LP1I.asm
+ISR2.System Defined=false
+ISR2.Name=LP2I
+ISR2.Enabled at Boot=false
+ISR2.Entry Point=LP2I_Entry
+ISR2.Source File=LP2I.asm
+ISR3.System Defined=false
+ISR3.Name=LP3I
+ISR3.Enabled at Boot=false
+ISR3.Entry Point=LP3I_Entry
+ISR3.Source File=LP3I.asm
+ISR4.System Defined=false
+ISR4.Name=LP4I
+ISR4.Enabled at Boot=false
+ISR4.Entry Point=LP4I_Entry
+ISR4.Source File=LP4I.asm
+ISR5.System Defined=false
+ISR5.Name=LP5I
+ISR5.Enabled at Boot=false
+ISR5.Entry Point=LP5I_Entry
+ISR5.Source File=LP5I.asm
+[Device Drivers]
+Count=1
+DeviceDriver0.System Defined=false
+DeviceDriver0.Name=LinkPort
+DeviceDriver0.Source File=LinkPort.cpp
+DeviceDriver0.Header File=LinkPort.h
+[I/O Objects]
+Count=6
+IOObject0.System Defined=false
+IOObject0.Name=Link0
+IOObject0.Template=LinkPort
+IOObject0.Initializer=0
+IOObject1.System Defined=false
+IOObject1.Name=Link1
+IOObject1.Template=LinkPort
+IOObject1.Initializer=1
+IOObject2.System Defined=false
+IOObject2.Name=Link2
+IOObject2.Template=LinkPort
+IOObject2.Initializer=2
+IOObject3.System Defined=false
+IOObject3.Name=Link3
+IOObject3.Template=LinkPort
+IOObject3.Initializer=3
+IOObject4.System Defined=false
+IOObject4.Name=Link4
+IOObject4.Template=LinkPort
+IOObject4.Initializer=4
+IOObject5.System Defined=false
+IOObject5.Name=Link5
+IOObject5.Template=LinkPort
+IOObject5.Initializer=5
+[Device Flags]
+Count=0
+[Memory Pools]
+Count=0
+[Multiprocessor Info]
+Count=1
+MultiProcInfo0.System Defined=true
+MultiProcInfo0.Name=MultiprocessorInfo
+MultiProcInfo0.Multiprocessor Messages Allowed=true
+MultiProcInfo0.Local Processor ID=0
+[Marshalled Message Types]
+Count=0
+[Imports]
+Count=1
+Import0.System Defined=false
+Import0.Name=../CoreB/Consumer_21160.vdk
+[Routing Threads]
+Count=2
+RoutingThread0.System Defined=false
+RoutingThread0.Name=InRouter
+RoutingThread0.I/O Object=Link4
+RoutingThread0.OpenDevice String=RN4
+RoutingThread0.Message Flow=incoming
+RoutingThread0.Priority=8
+RoutingThread0.Stack Size=255
+RoutingThread0.Thread Structure Heap=system_heap
+RoutingThread0.Context Heap=system_heap
+RoutingThread0.Stack Heap=system_heap
+RoutingThread1.System Defined=false
+RoutingThread1.Name=OutRouter
+RoutingThread1.I/O Object=Link0
+RoutingThread1.OpenDevice String=WN4
+RoutingThread1.Message Flow=outgoing
+RoutingThread1.Priority=2
+RoutingThread1.Stack Size=255
+RoutingThread1.Thread Structure Heap=system_heap
+RoutingThread1.Context Heap=system_heap
+RoutingThread1.Stack Heap=system_heap
+[Routing Nodes]
+Count=2
+RoutingNode0.System Defined=true
+RoutingNode0.Name=RoutingNode0
+RoutingNode0.Routing Thread=0
+RoutingNode1.System Defined=true
+RoutingNode1.Name=RoutingNode1
+RoutingNode1.Routing Thread=OutRouter
+[Heaps]
+Count=0

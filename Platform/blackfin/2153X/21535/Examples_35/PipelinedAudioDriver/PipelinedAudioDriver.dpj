@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding='ISO-8859-1'?>
+<visualdsp-project schema="17" name="PipelinedAudioDriver" file="PipelinedAudioDriver.dpj" version="1">
+	<!-- Project build target -->
+	<target>
+		<processor revision="Automatic">ADSP-BF535</processor>
+		<extension>.dxe</extension>
+		<type>Executable file</type>
+	</target>
+	<!-- Configurations -->
+	<configurations active="Release">
+		<configuration name="Debug">
+			<intermediate-dir>.\Debug</intermediate-dir>
+			<output-dir>.\Debug</output-dir>
+			<changed-property-page-flags>0</changed-property-page-flags>
+			<tools>
+				<tool type="Compiler">
+					<option><![CDATA[|-Version>5.0|-O>0|-O1>0|-Ov>100|-ipa>0|-g>1|-no-annotate>0|-save-temps -path-output>0|-ED>0|-no-auto-attrs>0|-no-builtin>0|-no-extra-keywords>0|-enum-is-int>0|-no-fp-associative>0|-structs-do-not-overlap>1|-implicit-pointers>0|-eh >0|-rtti>1|-check-init-order>0|-ignore-std>1|-const-read-write>0|-const-strings>0|-no-multiline>1|-misra>0|-misra-strict>0|-misra-no-cross-module>0|-misra-no-runtime>0|-misra-testing>0|-misra-suppress-advisory>0|-no-std-inc>0|-double-size-32>1|-double-size-any>0|-Ofp>0|-full-io>0|-guard-vol-loads>0|-decls-strong>1|-no-saturation>0|-cplbs>0|-sdram>0|-multicore>0|-pguide>0|NOSWITCH>0|-flags-compiler --diag_warning,implicit_func_decl>0|-warn-protos>1|-flags-compiler --diag_warning,call_not_inlined>0|-Wremarks>0|-w>0|AdditionalOptions>-threads]]></option>
+				</tool>
+				<tool type="Assembler">
+					<option><![CDATA[|-Version>4.5|-v>0|-g>1|-l>0|-save-temps>0|-sp>0|AdditionalOptions>-stallcheck=none]]></option>
+				</tool>
+				<tool type="Linker">
+					<option><![CDATA[|-Version>5.0|-flags-link -t>0|-flags-link -S>0|-flags-link -s>0|-mem>0|-flags-link -warnonce>0|-map>0|-flags-link -xref>0|-flags-link -save-temps>0|-flags-link -ip>0|-flags-link -e>0|-flags-link -ev>0|-add-debug-libpaths>1|-flags-link -MD__ADI_LIBEH__>0|-multicore>0|NOSWITCH>1]]></option>
+				</tool>
+				<tool type="Archiver">
+					<option><![CDATA[]]></option>
+				</tool>
+				<tool type="Loader">
+					<option><![CDATA[|-Version>4.5|-b Flash>1|-f HEX>1|-Width 8>1|-p>0x0|DefaultStart>0|-v>0|-waits >15|-BaudRate 500k>1|-HoldTime >3|-pFlag >0|-zinit>0|-No2Kernel>1|-o2>0|-kb Flash>1|-kf HEX>1|-kWidth 8>1|-kp>0x0|DefaultKernelStart>1|UserKernel>0|-romsplitter>0|split HEX>1|-maskaddr>0]]></option>
+				</tool>
+				<tool type="VdkGen">
+					<option><![CDATA[]]></option>
+				</tool>
+			</tools>
+		</configuration>
+		<configuration name="Release">
+			<intermediate-dir>.\Release</intermediate-dir>
+			<output-dir>.\Release</output-dir>
+			<changed-property-page-flags>0</changed-property-page-flags>
+			<tools>
+				<tool type="Compiler">
+					<option><![CDATA[|-Version>5.0|-O>1|-O1>1|-Ov>100|-ipa>0|-g>0|-no-annotate>0|-save-temps -path-output>0|-ED>0|-no-auto-attrs>0|-no-builtin>0|-no-extra-keywords>0|-enum-is-int>0|-no-fp-associative>0|-structs-do-not-overlap>1|-implicit-pointers>0|-eh >0|-rtti>1|-check-init-order>0|-ignore-std>1|-const-read-write>0|-const-strings>0|-no-multiline>1|-misra>0|-misra-strict>0|-misra-no-cross-module>0|-misra-no-runtime>1|-misra-testing>1|-misra-suppress-advisory>0|-no-std-inc>0|-double-size-32>1|-double-size-any>0|-Ofp>0|-full-io>0|-guard-vol-loads>0|-decls-strong>1|-no-saturation>0|-cplbs>0|-sdram>0|-multicore>0|-pguide>0|NOSWITCH>0|-flags-compiler --diag_warning,implicit_func_decl>0|-warn-protos>1|-flags-compiler --diag_warning,call_not_inlined>0|-Wremarks>0|-w>0|AdditionalOptions>-threads]]></option>
+				</tool>
+				<tool type="Assembler">
+					<option><![CDATA[|-Version>4.5|-v>0|-g>0|-l>0|-save-temps>0|-sp>0|AdditionalOptions>-stallcheck=none]]></option>
+				</tool>
+				<tool type="Linker">
+					<option><![CDATA[|-Version>5.0|-flags-link -t>0|-flags-link -S>0|-flags-link -s>0|-mem>0|-flags-link -warnonce>0|-map>0|-flags-link -xref>0|-flags-link -save-temps>0|-flags-link -ip>1|-flags-link -e>1|-flags-link -ev>0|-add-debug-libpaths>0|-flags-link -MD__ADI_LIBEH__>0|-multicore>0|NOSWITCH>1]]></option>
+				</tool>
+				<tool type="Archiver">
+					<option><![CDATA[]]></option>
+				</tool>
+				<tool type="Loader">
+					<option><![CDATA[|-Version>4.5|-b Flash>1|-f HEX>1|-Width 8>1|-p>0x0|DefaultStart>0|-v>0|-waits >15|-BaudRate 500k>1|-HoldTime >3|-pFlag >0|-zinit>0|-No2Kernel>1|-o2>0|-kb Flash>1|-kf HEX>1|-kWidth 8>1|-kp>0x0|DefaultKernelStart>1|UserKernel>0|-romsplitter>0|split HEX>1|-maskaddr>0]]></option>
+				</tool>
+				<tool type="VdkGen">
+					<option><![CDATA[]]></option>
+				</tool>
+			</tools>
+		</configuration>
+	</configurations>
+	<!-- Project folders -->
+	<folders>
+		<folder name="Header Files" ext=".h,.hpp,.hxx">
+			<files>
+				<file name=".\AD1885.h">
+				</file>
+				<file name=".\AudioMsg.h">
+				</file>
+				<file name=".\InitCodec.h">
+				</file>
+				<file name=".\Input.h">
+				</file>
+				<file name=".\Output.h">
+				</file>
+				<file name=".\Relay.h">
+				</file>
+			</files>
+		</folder>
+		<folder name="Kernel Files" ext=".vdk">
+			<files>
+				<file name=".\PipelinedAudioDriver.vdk">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\VDK.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\VDK.h">
+				</file>
+			</files>
+		</folder>
+		<folder name="Linker Files" ext=".ldf,.dlb">
+			<files>
+				<file name=".\VDK-BF535.ldf">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+			</files>
+		</folder>
+		<folder name="Source Files" ext=".c,.cpp,.cxx,.asm,.dsp,.s">
+			<files>
+				<file name=".\AD1885.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\Codec.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\EVT_IVG8.asm">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\ExceptionHandler-BF535.asm">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\Input.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\Output.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\Relay.cpp">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+			</files>
+		</folder>
+	</folders>
+	<!-- Files under root directly -->
+	<files>
+		<file name=".\readme.txt">
+		</file>
+	</files>
+	<!-- System Builder Components -->
+	<system-builder-component-tables>
+		<system-builder-plugin name="Startup Code Wizard" version="2.0">
+			<system-builder-component name="Project Options">
+				<property name="Compiler Multicore"><![CDATA[False]]></property>
+				<property name="Configuration"><![CDATA[Release]]></property>
+				<property name="Full IO"><![CDATA[False]]></property>
+				<property name="Intermediate Directory"><![CDATA[.\Release]]></property>
+				<property name="Linker Multicore"><![CDATA[False]]></property>
+				<property name="Name"><![CDATA[PipelinedAudioDriver]]></property>
+				<property name="Silicon Revision"><![CDATA[Automatic]]></property>
+				<property name="Strict IEEE Floating Point Compliance"><![CDATA[False]]></property>
+				<property name="Use C++ exceptions libraries"><![CDATA[False]]></property>
+			</system-builder-component>
+		</system-builder-plugin>
+	</system-builder-component-tables>
+</visualdsp-project>

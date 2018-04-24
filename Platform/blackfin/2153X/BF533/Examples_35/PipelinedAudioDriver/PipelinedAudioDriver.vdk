@@ -1,0 +1,125 @@
+[Version]
+VdkFileVersion=4.0
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=270
+System.Tick Period (ms)=0.1
+System.History Buffer Size=256
+System.Maximum Running Threads=10
+System.Instrumentation Level=Full Instrumentation
+System.Timer Interrupt=EVT_IVTMR
+System.Maximum Active Memory Pools=1
+System.Maximum Active Semaphores=0
+System.Maximum Messages=32
+System.Maximum Active Device Flags=8
+System.Maximum I/O Objects=4
+System.Semaphores Heap=system_heap
+System.Device Flags Heap=system_heap
+System.Messages Heap=system_heap
+System.I/O Objects Heap=system_heap
+System.Number of Nodes=1
+[Idle Thread]
+Count=1
+IdleThread0.System Defined=true
+IdleThread0.Name=IdleThread
+IdleThread0.Stack Size=256
+IdleThread0.Heap=system_heap
+[Thread Types]
+Count=3
+ThreadType0.System Defined=false
+ThreadType0.Name=Input
+ThreadType0.Priority=5
+ThreadType0.Message Enabled=true
+ThreadType0.Thread Structure Heap=system_heap
+ThreadType0.Stack Heap=system_heap
+ThreadType0.Stack Size=255
+ThreadType0.Source File=Input.cpp
+ThreadType0.Header File=Input.h
+ThreadType1.System Defined=false
+ThreadType1.Name=Output
+ThreadType1.Priority=5
+ThreadType1.Message Enabled=true
+ThreadType1.Thread Structure Heap=system_heap
+ThreadType1.Stack Heap=system_heap
+ThreadType1.Stack Size=255
+ThreadType1.Source File=Output.cpp
+ThreadType1.Header File=Output.h
+ThreadType2.System Defined=false
+ThreadType2.Name=Relay
+ThreadType2.Priority=5
+ThreadType2.Message Enabled=true
+ThreadType2.Thread Structure Heap=system_heap
+ThreadType2.Stack Heap=system_heap
+ThreadType2.Stack Size=255
+ThreadType2.Source File=Relay.cpp
+ThreadType2.Header File=Relay.h
+[Boot Threads]
+Count=3
+BootThread0.System Defined=false
+BootThread0.Name=Read
+BootThread0.Thread Type=Input
+BootThread0.Initializer=0
+BootThread1.System Defined=false
+BootThread1.Name=Writer
+BootThread1.Thread Type=Output
+BootThread1.Initializer=0
+BootThread2.System Defined=false
+BootThread2.Name=Monitor
+BootThread2.Thread Type=Relay
+BootThread2.Initializer=0
+[Priorities]
+Count=0
+[Semaphores]
+Count=0
+[Events]
+Count=0
+[Event Bits]
+Count=0
+[Interrupts]
+Count=1
+ISR0.System Defined=false
+ISR0.Name=EVT_IVG9
+ISR0.Enabled at Boot=true
+ISR0.Entry Point=EVT_IVG9_Entry
+ISR0.Source File=EVT_IVG9.asm
+[Device Drivers]
+Count=1
+DeviceDriver0.System Defined=false
+DeviceDriver0.Name=AD1836
+DeviceDriver0.Source File=AD1836.cpp
+DeviceDriver0.Header File=AD1836.h
+[I/O Objects]
+Count=1
+IOObject0.System Defined=false
+IOObject0.Name=Codec0
+IOObject0.Template=AD1836
+IOObject0.Initializer=0
+[Device Flags]
+Count=0
+[Memory Pools]
+Count=1
+MemoryPool0.System Defined=false
+MemoryPool0.Name=AudioBuffers
+MemoryPool0.Block Size=192
+MemoryPool0.Number of Blocks=6
+MemoryPool0.Initialize on Pool Creation=true
+MemoryPool0.Heap=0
+[Multiprocessor Info]
+Count=1
+MultiProcInfo0.System Defined=true
+MultiProcInfo0.Name=MultiprocessorInfo
+MultiProcInfo0.Multiprocessor Messages Allowed=false
+MultiProcInfo0.Local Processor ID=0
+[Marshalled Message Types]
+Count=0
+[Imports]
+Count=0
+[Routing Threads]
+Count=0
+[Routing Nodes]
+Count=1
+RoutingNode0.System Defined=true
+RoutingNode0.Name=RoutingNode0
+RoutingNode0.Routing Thread=0
+[Heaps]
+Count=0

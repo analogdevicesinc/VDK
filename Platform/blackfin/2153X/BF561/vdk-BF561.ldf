@@ -1,0 +1,1264 @@
+/*
+** Default LDF for a VDK project on the ADSP-BF561.
+** 
+** There are configuration options that can be specified either by compiler
+** flags, or by linker flags directly. These options are:
+**
+** __WORKAROUNDS_ENABLED
+**      Defined by compiler when -workaround is used to direct LDF to
+**      link with libraries that have been built with work-arounds enabled.
+** USE_CACHE
+**      Makes use of some L1 memory as cache. Implies the presence of at
+**      least some external memory.
+** _ADI_SOV_DETECTION
+**   Macro defined when stack overflow detection is enabled, causes the _SOV
+**   version of TMK  to be linked in, context switching the variable that
+**   determines the stack location.
+** USER_CRT
+**    Specifies a custom or System Builder generated CRT object to use.
+** COREA
+**      Build a DXE for Core A (default)
+** COREB
+**      Build a DXE for Core B
+** _ADI_LIBIO
+**   Use the ADI io library (default and fast)
+** _ADI_FX_LIBIO
+**   Defined by the compiler when switch -embedded-io is used to direct the
+**   use of libio with support for embedded C conversion specifiers.
+** _DINKUM_IO
+**   Use dinkum io library (slower but more compatible). Enabled
+**   by the flag -cstd-io
+*/
+
+// Setup the architecture
+ARCHITECTURE(ADSP-BF561)
+
+// Setup the search directories
+SEARCH_DIR( $ADI_DSP/BLACKFIN/lib )
+
+# if defined(USE_INSTRUCTION_CACHE) || \
+     defined(USE_DATA_A_CACHE) || defined(USE_DATA_B_CACHE)
+#  define USE_CACHE_PARTS 1
+# else
+#  define USE_CACHE_PARTS 0
+#endif
+
+#define INSTR_CACHE \
+    ( defined(USE_CACHE) && \
+     ( ( defined(USE_INSTRUCTION_CACHE) || !USE_CACHE_PARTS ) ) )
+
+#define DATAA_CACHE \
+    ( defined(USE_CACHE) && \
+     ( ( defined(USE_DATA_A_CACHE) || defined(USE_DATA_B_CACHE) || \
+         !USE_CACHE_PARTS ) ) )
+
+#define DATAB_CACHE \
+    ( defined(USE_CACHE) && \
+     ( ( defined(USE_DATA_B_CACHE) || !USE_CACHE_PARTS ) ) )
+
+# if defined(USE_INSTRUCTION_CACHE) || \
+     defined(USE_DATA_A_CACHE) || defined(USE_DATA_B_CACHE)
+#  define USE_CACHE_PARTS 1
+# else
+#  define USE_CACHE_PARTS 0
+#endif
+
+#if !defined(COREA) && !defined(COREB)
+#define COREA
+#endif
+
+/* definitions related to the placement of heap and stack */
+/*
+** decide if to include mappings to SDRAM or not
+*/
+#if !defined(USE_SDRAM) && \
+    ( defined(USE_CACHE) || defined(USE_SDRAM_STACK) || \
+      defined(USE_SDRAM_HEAP) )
+#  define USE_SDRAM
+#endif
+
+
+// our default stack size is small so it can fit in scratchpad leaving space
+// for other things in other memory areas
+#if !defined (USE_SDRAM_STACK) && !defined (USE_L1_DATA_STACK) && !defined (USE_L2_STACK) 
+#define USE_SCRATCHPAD_STACK
+#endif
+
+#ifndef USE_L1_DATA_STACK
+#define USE_L1_DATA_STACK (!defined(USE_SCRATCHPAD_STACK) && !defined(USE_SDRAM_STACK) && !defined (USE_L2_STACK))
+#endif
+
+#ifndef USE_L1_DATA_HEAP
+#define USE_L1_DATA_HEAP  (!defined(USE_SCRATCHPAD_HEAP) && !defined(USE_SDRAM_HEAP)&& !defined (USE_L2_HEAP) )
+#endif
+
+// minimum sizes of the stack and heap allocated
+#define STACK_SIZE 1K
+#define HEAP_SIZE 11K
+#define STACKHEAP_SIZE 12K
+
+
+// Include the VDK preprocessor macros
+#define VDK_LDF_
+#include "VDK.h"
+
+// Setup the VDK library preprocessor macros
+#if VDK_INSTRUMENTATION_LEVEL_==2
+#define VDK_IFLAG_ i
+#elif VDK_INSTRUMENTATION_LEVEL_==1
+#define VDK_IFLAG_ e
+#else
+#define VDK_IFLAG_ n
+#endif
+
+  #define VDK_LIB_NAME_MACRO_(x) vdk- ## x ## -BF561.dlb
+  #define VDK_LIB_NAME_(x) VDK_LIB_NAME_MACRO_(x)
+#ifdef __WORKAROUNDS_ENABLED
+    #define RT_LIB_NAME(x) lib ## x ## y.dlb
+    #define RT_LIB_NAME_MT(x) lib ## x ## mty.dlb
+    #define RT_OBJ_NAME(x) x ## y.doj
+    #define RT_OBJ_NAME_MT(x) x ## mty.doj
+  #ifdef __ADI_LIBEH__
+    #define RT_LIB_NAME_EH(x) lib ## x ## yx.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mtyx.dlb
+  #else /* __ADI_LIBEH__ */
+    #define RT_LIB_NAME_EH(x) lib ## x ## y.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mty.dlb
+  #endif
+#else /* __WORKAROUNDS_ENABLED */
+    #define RT_LIB_NAME(x) lib ## x ## .dlb
+    #define RT_LIB_NAME_MT(x) lib ## x ## mt.dlb
+    #define RT_OBJ_NAME(x) x ## .doj
+    #define RT_OBJ_NAME_MT(x) x ## mt.doj
+  #ifdef __ADI_LIBEH__
+    #define RT_LIB_NAME_EH(x) lib ## x ## x.dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mtx.dlb
+  #else /* __ADI_LIBEH__ */
+    #define RT_LIB_NAME_EH(x) lib ## x ## .dlb
+    #define RT_LIB_NAME_EH_MT(x) lib ## x ## mt.dlb
+  #endif
+#endif /* __WORKAROUNDS_ENABLED */
+
+#ifdef USER_CRT
+  #define CRT USER_CRT
+#else
+  #define CRT RT_OBJ_NAME_MT(crtsfc561)
+#endif
+
+#if defined(USER_CPLBTAB)
+   #define CPLBTAB USER_CPLBTAB
+#else
+   /* cplbtab.L2stack.doj locks L2 leaving two blocks of SDRAM which are
+    * locked in cplbtab.doj unlocked. On VDK thread stacks come from
+    * the heap so we only use cplbtab.L2stack.doj if the system heap is not 
+    * located in the area which is unlocked on cplbtab.L2stack.doj (SDRAM)
+    */
+   #ifdef COREA
+      #if defined (USE_L2_STACK) && !defined (USE_SDRAM_HEAP)
+        #define CPLBTAB cplbtab561a.L2stack.doj 
+      #else
+        #define CPLBTAB cplbtab561a.doj
+      #endif
+   #else
+      #if defined (USE_L2_STACK) && !defined (USE_SDRAM_HEAP)
+        #define CPLBTAB cplbtab561b.L2stack.doj 
+      #else
+        #define CPLBTAB cplbtab561b.doj
+      #endif
+   #endif
+#endif
+
+#define MEMINIT __initsbsz561.doj
+
+$LIBRARIES =
+   RT_LIB_NAME_MT(small561)
+#if defined (__MEMINIT__) 
+   ,MEMINIT
+#endif
+#if defined(_DINKUM_IO)
+   ,RT_LIB_NAME_MT(c561)         /* ANSI C (and IO) run-time library */
+   ,RT_LIB_NAME_MT(io561)        /* Fast IO and host IO support      */
+#else
+#if defined(_ADI_FX_LIBIO)
+   ,RT_LIB_NAME_MT(iofx561)      /* Fast IO and host IO with         */
+                                 /* embedded C support               */
+#else
+   ,RT_LIB_NAME_MT(io561)        /* Fast IO and host IO support      */
+#endif
+   ,RT_LIB_NAME_MT(c561)         /* ANSI C (and IO) run-time library */
+#endif
+#if defined(USE_FILEIO)
+   ,RT_LIB_NAME_MT(rt_fileio561)    /* Run-time Support with File IO    */
+#else
+   ,RT_LIB_NAME_MT(rt561)           /* Run-time Support without File IO */
+#endif
+   ,RT_LIB_NAME_MT(event561)
+   ,RT_LIB_NAME_EH_MT(cpp561)
+#if defined(IEEEFP)
+   ,RT_LIB_NAME(sftflt561)    /* IEEE floating-point emulation    */
+#endif
+   ,RT_LIB_NAME(f64ieee561)   /* 64-bit floating-point support    */
+   ,RT_LIB_NAME(dsp561)       /* DSP run-time library             */
+#if !defined(IEEEFP)
+   ,RT_LIB_NAME(sftflt561)    /* IEEE floating-point emulation    */
+#endif
+   ,RT_LIB_NAME(etsi561)
+   ,RT_LIB_NAME(osal561_vdk)
+   ,RT_LIB_NAME(ssl561_vdk)
+   ,RT_LIB_NAME(drv561)
+   ,RT_LIB_NAME(usb561)
+   ,RT_OBJ_NAME_MT(idle561)
+   ,RT_LIB_NAME_MT(rt_fileio561)
+   ;
+
+$BASE_LIBRARIES = $LIBRARIES;
+
+$LIBS = 
+#ifdef _ADI_SOV_DETECTION
+   TMK-BF561_sov.dlb, 
+#else
+   TMK-BF561.dlb,
+#endif
+   VDK_LIB_NAME_(CORE),
+   VDK_LIB_NAME_(VDK_IFLAG_),
+   $BASE_LIBRARIES;
+
+$OBJS = CRT, $COMMAND_LINE_OBJECTS, CPLBTAB, RT_OBJ_NAME_MT(crtn561);
+
+#ifdef COREA
+$OBJECTS_CORE_A = $OBJS;
+$LIBRARIES_CORE_A = $LIBS ;
+$OBJS_LIBS_INTERNAL_CORE_A= 
+    $OBJECTS_CORE_A{prefersMem("internal")},
+	$LIBRARIES_CORE_A{prefersMem("internal")};
+$OBJS_LIBS_NOT_EXTERNAL_CORE_A= 
+	$OBJECTS_CORE_A{!prefersMem("external")},
+	$LIBRARIES_CORE_A{!prefersMem("external")};
+$INPUT_BY_MEM_TYPE_CORE_A =
+	$OBJS_LIBS_INTERNAL_CORE_A,
+	$OBJS_LIBS_NOT_EXTERNAL_CORE_A,
+	$OBJECTS_CORE_A, 
+	$LIBRARIES_CORE_A;
+#else
+$OBJECTS_CORE_B = $OBJS{!sharing("MustShare")};
+$LIBRARIES_CORE_B = $LIBS{!sharing("MustShare")} ;
+$OBJS_LIBS_INTERNAL_CORE_B= 
+    $OBJECTS_CORE_B{prefersMem("internal")},
+	$LIBRARIES_CORE_B{prefersMem("internal")};
+$OBJS_LIBS_NOT_EXTERNAL_CORE_B= 
+	$OBJECTS_CORE_B{!prefersMem("external")},
+	$LIBRARIES_CORE_B{!prefersMem("external")};
+$INPUT_BY_MEM_TYPE_CORE_B =
+	$OBJS_LIBS_INTERNAL_CORE_B,
+	$OBJS_LIBS_NOT_EXTERNAL_CORE_B,
+	$OBJECTS_CORE_B, 
+	$LIBRARIES_CORE_B;
+#endif
+
+/*
+** Memory map.
+**
+** The known memory spaces are as follows:
+**
+** 0xFFE00000 - 0xFFFFFFFF  Core MMR registers (2MB per core)
+** 0xFFC00000 - 0xFFDFFFFF  System MMR registers (2MB)
+** CoreA:
+** 0xFFB01000 - 0xFFBFFFFF  Reserved
+** 0xFFB00000 - 0xFFB00FFF  Scratch SRAM (4K)
+** 0xFFA14000 - 0xFFAFFFFF  Reserved
+** 0xFFA10000 - 0xFFA13FFF  Code SRAM / cache (16K)
+** 0xFFA04000 - 0xFFA0FFFF  Reserved
+** 0xFFA00000 - 0xFFA03FFF  Code SRAM (16K)
+** 0xFF908000 - 0xFF9FFFFF  Reserved
+** 0xFF904000 - 0xFF907FFF  Data Bank B SRAM / cache (16K)
+** 0xFF900000 - 0xFF903FFF  Data Bank B SRAM (16K)
+** 0xFF804000 - 0xFF807FFF  Data Bank A SRAM / cache (16K)
+** 0xFF800000 - 0xFF803FFF  Data Bank A SRAM (16K)
+** 0xFF400000 - 0xFF7FFFFF  Reserved
+** CoreB:
+** 0xFF701000 - 0xFFBFFFFF  Reserved
+** 0xFF700000 - 0xFF700FFF  Scratch SRAM (4K)
+** 0xFF614000 - 0xFF6FFFFF  Reserved
+** 0xFF610000 - 0xFF613FFF  Code SRAM / cache (16K)
+** 0xFF604000 - 0xFF60FFFF  Reserved
+** 0xFF600000 - 0xFF603FFF  Code SRAM (16K)
+** 0xFF508000 - 0xFF5FFFFF  Reserved
+** 0xFF504000 - 0xFF507FFF  Data Bank B SRAM / cache (16K)
+** 0xFF500000 - 0xFF503FFF  Data Bank B SRAM (16K)
+** 0xFF404000 - 0xFF407FFF  Data Bank A SRAM / cache (16K)
+** 0xFF400000 - 0xFF403FFF  Data Bank A SRAM (16K)
+** Shared mem:
+** 0xFFB20000 - 0xFF3FFFFF  Reserved
+** 0xFEB00000 - 0xFEB1FFFF  L2 SRAM (128K)
+** 0xEF000800 - 0xFEAFFFFF  Reserved
+** 0xEF000000 - 0xEF007FFF  Boot ROM
+** 0x30000000 - 0xEEFFFFFF  Reserved
+** 0x2C000000 - 0x2FFFFFFF  ASYNC MEMORY BANK 3 (64MB)
+** 0x20200000 - 0x202FFFFF  ASYNC MEMORY BANK 2 (1MB)
+** 0x20100000 - 0x201FFFFF  ASYNC MEMORY BANK 1 (1MB)
+** 0x20000000 - 0x200FFFFF  ASYNC MEMORY BANK 0 (1MB)
+** 0x00000000 - 0x04000000  EZKIT SDRAM MEMORY (64MB)
+** 0x00000000 - 0x1FFFFFFF  SDRAM MEMORY (0-512MB)
+**
+** Notes:
+** FEB1FC00->FEB1FFFF : Reseved in boot Phase for 2nd stage boot loader
+**
+*/
+
+MEMORY
+{
+/* L1 memory Core A */
+mem_a_l1_scratch      { TYPE(RAM) START(0xFFB00000) END(0xFFB00FFF) WIDTH(8) }
+mem_a_l1_code         { TYPE(RAM) START(0xFFA00000) END(0xFFA03FFF) WIDTH(8) }
+mem_a_l1_code_cache   { TYPE(RAM) START(0xFFA10000) END(0xFFA13FFF) WIDTH(8) }
+
+#if DATAB_CACHE
+mem_a_l1_data_b       { TYPE(RAM) START(0xFF900000) END(0xFF903FFF) WIDTH(8) }
+mem_a_l1_data_b_cache { TYPE(RAM) START(0xFF904000) END(0xFF907FFF) WIDTH(8) }
+#else
+mem_a_l1_data_b       { TYPE(RAM) START(0xFF900000) END(0xFF907FFF) WIDTH(8) }
+#endif
+#if DATAA_CACHE
+mem_a_l1_data_a_cache { TYPE(RAM) START(0xFF804000) END(0xFF807FFF) WIDTH(8) }
+mem_a_l1_data_a       { TYPE(RAM) START(0xFF800000) END(0xFF803FFF) WIDTH(8) }
+#else
+mem_a_l1_data_a       { TYPE(RAM) START(0xFF800000) END(0xFF807FFF) WIDTH(8) }
+#endif
+
+
+/* L1 memory Core B */
+mem_b_l1_scratch      { TYPE(RAM) START(0xFF700000) END(0xFF700FFF) WIDTH(8) }
+mem_b_l1_code         { TYPE(RAM) START(0xFF600000) END(0xFF603FFF) WIDTH(8) }
+mem_b_l1_code_cache   { TYPE(RAM) START(0xFF610000) END(0xFF613FFF) WIDTH(8) }
+
+#if DATAB_CACHE
+mem_b_l1_data_b       { TYPE(RAM) START(0xFF500000) END(0xFF503FFF) WIDTH(8) }
+mem_b_l1_data_b_cache { TYPE(RAM) START(0xFF504000) END(0xFF507FFF) WIDTH(8) }
+#else
+mem_b_l1_data_b       { TYPE(RAM) START(0xFF500000) END(0xFF507FFF) WIDTH(8) }
+#endif
+#if DATAA_CACHE
+mem_b_l1_data_a       { TYPE(RAM) START(0xFF400000) END(0xFF403FFF) WIDTH(8) }
+mem_b_l1_data_a_cache { TYPE(RAM) START(0xFF404000) END(0xFF407FFF) WIDTH(8) }
+#else
+mem_b_l1_data_a       { TYPE(RAM) START(0xFF400000) END(0xFF407FFF) WIDTH(8) }
+#endif
+
+/* L2 SRAM - 128K. */
+/* For convenience, we divide this space into: */
+/* Core B only - 32K */
+/* Core A only - 32K */
+/* Shared = 64K */
+/* And then subdivide each core-only area for program layout. */
+
+/* L2 memory Core B - FEB00000 to FEB07FFF */
+mem_b_l2_sram         { TYPE(RAM) START(0xFEB00000) END(0xFEB07FFF) WIDTH(8) }
+
+/* L2 memory Core A - FEB08000 to FEB0FFFF */
+mem_a_l2_sram         { TYPE(RAM) START(0xFEB08000) END(0xFEB0FFFF) WIDTH(8) }
+
+mem_l2_shared         { TYPE(RAM) START(0xFEB10000) END(0xFEB1FFFF) WIDTH(8) }
+
+  /*   The ADSP-BF561 EZ-KIT is supplied with 64 MB SDRAM.
+  **   The ADSP-BF561 EBIU allows for 4 sub-banks to be accessed simultaneously
+  **   Defining this macro causes the LDF to partition the available SDRAM into
+  **   4 8MB banks per core. This makes the best use of the EBIU and minimizes 
+  **   memory access stall cycles.  
+  **   The default LDF contains a configuration for two external banks
+  **   each holding 32MB SDRAM. The default LDF uses one bank per core,
+  **   partitioned to segment data and program.
+  **   Bank usage:
+  **      Bank 0 - 8MB/core - Heap
+  **      Bank 1 - 8MB/core - Data
+  **      Bank 2 - 8MB/core - Data/BSZ
+  **      Bank 3 - 8MB Core A, 4MB Core B - Program
+  **                             4MB shared - misc
+  **    See ADSP-BF561 Hardware Reference Manual, SDRAM controller section
+  **    for further information.
+  */
+
+/* CoreA: Heap */ 
+mem_sdram0_bank0      {TYPE(RAM) START(0x00000004) END(0x007FFFFF) WIDTH(8) }
+/* CoreA: Data */ 
+mem_sdram0_bank1      {TYPE(RAM) START(0x00800000) END(0x00FFFFFF) WIDTH(8) }
+/* CoreA: Data/BSZ */ 
+mem_sdram0_bank2      {TYPE(RAM) START(0x01000000) END(0x017FFFFF) WIDTH(8) }
+/* CoreA: Program */ 
+mem_sdram0_bank3      {TYPE(RAM) START(0x01800000) END(0x01FFFFFF) WIDTH(8) }
+/* CoreB: Heap */ 
+mem_sdram1_bank0      {TYPE(RAM) START(0x02000000) END(0x027FFFFF) WIDTH(8) }
+/* CoreB: Data */ 
+mem_sdram1_bank1      {TYPE(RAM) START(0x02800000) END(0x02FFFFFF) WIDTH(8) }
+/* CoreB: Data/BSZ */ 
+mem_sdram1_bank2      {TYPE(RAM) START(0x03000000) END(0x037FFFFF) WIDTH(8) } 
+/* CoreB: Program */ 
+mem_sdram1_bank3      {TYPE(RAM) START(0x03800000) END(0x03BFFFFF) WIDTH(8) }
+
+/* Shared SDRAM */
+mem_sdram1_shared     {TYPE(RAM) START(0x03C00000) END(0x03FFFFFF) WIDTH(8) }
+}
+
+
+/* Core A */
+#ifdef COREA
+PROCESSOR p0
+{
+   OUTPUT( $COMMAND_LINE_OUTPUT_FILE )
+   RESOLVE(start,0xFFA00000)
+   KEEP(start,_main)
+   KEEP(_kMaxNumThreads__3VDK)
+   KEEP(_kMaxNumActiveSemaphores__3VDK)
+   KEEP(_g_Sem_ThreadBaseOffset__3VDK)
+   KEEP(_kMaxNumActiveDevFlags__3VDK)
+   KEEP(_kMaxNumActiveMessages__3VDK)
+   KEEP(_kMaxNumActiveMemoryPools__3VDK)
+   KEEP(_kNumEvents__3VDK)
+   KEEP(_kNumEventBits__3VDK)
+
+    SECTIONS
+    {
+#if defined(__WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES) /* { */
+    /* Workaround for hardware errata 05-00-0189 and 05-00-0310 -
+    ** "Speculative (and fetches made at boundary of reserved memory
+    ** space) for instruction or data fetches may cause false
+    ** protection exceptions" and "False hardware errors caused by
+    ** fetches at the boundary of reserved memory ".
+    **
+    ** Done by avoiding use of 76 bytes from at the end of blocks
+    ** that are adjacent to reserved memory. Workaround is enabled
+    ** for appropriate silicon revisions (-si-revision switch).
+    */
+    RESERVE(___waba0=0xFFB00FFF - 75,___la0=76)   /* scratchpad */
+#  if !INSTR_CACHE
+    RESERVE(___waba1=0xFFA13FFF - 75,___la1=76)   /* l1 instr sram/cache */
+#  endif
+    RESERVE(___waba2=0xFFA03FFF - 75,___la2=76)   /* l1 instr sram */
+#  if DATAB_CACHE
+    RESERVE(___waba3=0xFF903FFF - 75,___la3=76)   /* data B sram */
+#  else
+    RESERVE(___waba4=0xFF907FFF - 75,___la4=76)   /* data B sram/cache */
+#  endif
+#  if DATAA_CACHE
+    RESERVE(___waba5=0xFF803FFF - 75,___la5=76)   /* data A sram */
+#  else
+    RESERVE(___waba6=0xFF807FFF - 75,___la6=76)   /* data A sram/cache */
+#  endif
+    RESERVE(___waba7=0xFEB1FFFF - 75,___la7=76)   /* L2 sram */
+    RESERVE(___waba9=MEMORY_END(mem_sdram1_shared) - 75,___la9=76)    /* EZ-Kit 64MB sdram */
+#else
+    /* FEB1FC00->FEB1FFFF : Reseved in boot Phase for 2nd stage boot loader */
+    RESERVE(___ssld=0xFEB1FC00,___lssld=0x400)
+#endif /*} __WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES */
+   L1_scratchpad NO_INIT
+   {
+      INPUT_SECTION_ALIGN(4)
+      INPUT_SECTIONS($OBJS(L1_scratchpad) $LIBS(L1_scratchpad))
+   } > mem_a_l1_scratch 
+
+#if defined(USE_SCRATCHPAD_STACK) || defined(USE_SCRATCHPAD_HEAP)
+   stack_and_heap_scratchpad
+   {
+      INPUT_SECTION_ALIGN(4)
+      RESERVE(stack_and_heap_in_scratchpad, stack_and_heap_in_scratchpad_length,4)
+#if defined(USE_SCRATCHPAD_STACK) && defined(USE_SCRATCHPAD_HEAP)
+      ldf_stack_space = stack_and_heap_in_scratchpad;
+      ldf_stack_end = (ldf_stack_space + ((stack_and_heap_in_scratchpad_length *STACK_SIZE) / STACKHEAP_SIZE) - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_SCRATCHPAD_STACK)
+      ldf_stack_space = stack_and_heap_in_scratchpad;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+#elif defined(USE_SCRATCHPAD_HEAP)
+      ldf_heap_space = stack_and_heap_in_scratchpad;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_scratchpad_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_a_l1_scratch
+#endif
+        sec_program
+        {
+            INPUT_SECTION_ALIGN(4)
+            __CORE = 0;
+            INPUT_SECTIONS( $LIBRARIES_CORE_A(VDK_ISR_code) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_code) $LIBRARIES_CORE_A(L1_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb) $LIBRARIES_CORE_A(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_code) $LIBRARIES_CORE_A(cplb_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(noncache_code) $LIBRARIES_CORE_A(noncache_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_A(program))
+        } >mem_a_l1_code
+
+        l1_code
+        {
+#if INSTR_CACHE /* { */
+                ___l1_code_cache = 1;
+#else
+                ___l1_code_cache = 0;
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $LIBRARIES_CORE_A(VDK_ISR_code) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_code) $LIBRARIES_CORE_A(L1_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb) $LIBRARIES_CORE_A(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_code) $LIBRARIES_CORE_A(cplb_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_A(program))
+#endif /* INSTR_CACHE } */
+        } >mem_a_l1_code_cache
+
+         bsz_L1_data_a ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_bsz) $LIBRARIES_CORE_A(L1_bsz))
+        } >mem_a_l1_data_a
+
+        L1_data_a_1
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l1_data_a) $LIBRARIES_CORE_A(l1_data_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_data_a) $LIBRARIES_CORE_A(L1_data_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l1_data) $LIBRARIES_CORE_A(l1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_data) $LIBRARIES_CORE_A(L1_data))
+				INPUT_SECTIONS( $OBJECTS_CORE_A(vtbl) $LIBRARIES_CORE_A(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.frt) $LIBRARIES_CORE_A(.frt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.frtl) $LIBRARIES_CORE_A(.frtl) )
+#if !DATAA_CACHE
+            ___l1_data_cache_a = 0;
+#endif
+        } >mem_a_l1_data_a
+
+        L1_data_a_tables
+        {
+            INPUT_SECTION_ALIGN(4)
+            FORCE_CONTIGUITY
+            INPUT_SECTIONS( $OBJECTS_CORE_A(ctor) $LIBRARIES_CORE_A(ctor) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(ctorl) $LIBRARIES_CORE_A(ctorl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.gdt) $LIBRARIES_CORE_A(.gdt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.gdtl) $LIBRARIES_CORE_A(.gdtl) )
+        } >mem_a_l1_data_a
+
+        L1_data_a
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.rtti) $LIBRARIES_CORE_A(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.edt) $LIBRARIES_CORE_A(.edt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.cht) $LIBRARIES_CORE_A(.cht) )
+            INPUT_SECTIONS($OBJECTS_CORE_A(voldata) $LIBRARIES_CORE_A(voldata))
+            INPUT_SECTIONS($OBJECTS_CORE_A(constdata) $LIBRARIES_CORE_A(constdata))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_A(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_data) $LIBRARIES_CORE_A(cplb_data))
+        } >mem_a_l1_data_a
+
+         l1_data_a_bsz ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(bsz) $LIBRARIES_CORE_A(bsz))
+        } >mem_a_l1_data_a
+         
+			bsz_L1_data_b ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_bsz) $LIBRARIES_CORE_A(L1_bsz))
+        } >mem_a_l1_data_b
+
+		  L1_data_b
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l1_data_b) $LIBRARIES_CORE_A(l1_data_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_data_b) $LIBRARIES_CORE_A(L1_data_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l1_data) $LIBRARIES_CORE_A(l1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L1_data) $LIBRARIES_CORE_A(L1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(voldata) $LIBRARIES_CORE_A(voldata))
+#if USE_L1_DATA_HEAP && USE_L1_DATA_STACK
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = STACKHEAP_SIZE,4)
+#elif USE_L1_DATA_HEAP 
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = HEAP_SIZE,4)
+#elif USE_L1_DATA_STACK
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = STACK_SIZE,4)
+#endif
+            INPUT_SECTIONS( $OBJECTS_CORE_A(constdata) $LIBRARIES_CORE_A(constdata))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_A(data1))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_A(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(vtbl) $LIBRARIES_CORE_A(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.rtti) $LIBRARIES_CORE_A(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.edt) $LIBRARIES_CORE_A(.edt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.cht) $LIBRARIES_CORE_A(.cht) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(data1) $LIBRARIES_CORE_A(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_data) $LIBRARIES_CORE_A(cplb_data))
+        } >mem_a_l1_data_b
+
+         l1_data_b_bsz ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(bsz) $LIBRARIES_CORE_A(bsz))
+        } >mem_a_l1_data_b
+
+#if USE_L1_DATA_STACK || USE_L1_DATA_HEAP
+   stack_and_heap_L1_data_b
+   {
+      INPUT_SECTION_ALIGN(4)
+      RESERVE_EXPAND(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length,0,4)
+#if USE_L1_DATA_STACK && USE_L1_DATA_HEAP
+      ldf_stack_space = stack_and_heap_in_L1_data_b;
+      ldf_stack_end = (ldf_stack_space + (stack_and_heap_in_L1_data_b_length * STACK_SIZE)/ STACKHEAP_SIZE - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_L1_data_b_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif USE_L1_DATA_STACK
+      ldf_stack_space = stack_and_heap_in_L1_data_b;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_L1_data_b_length;
+#elif USE_L1_DATA_HEAP
+      ldf_heap_space = stack_and_heap_in_L1_data_b;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_L1_data_b_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_a_l1_data_b
+#endif
+
+
+#if DATAA_CACHE 
+        l1_data_a
+        {
+            INPUT_SECTION_ALIGN(4)
+            ___l1_data_cache_a = 1;
+        } >mem_a_l1_data_a_cache
+#endif /* DATAA_CACHE */
+
+#if DATAB_CACHE 
+        l1_data_b
+        {
+            INPUT_SECTION_ALIGN(4)
+            ___l1_data_cache_b = 1;
+        } >mem_a_l1_data_b_cache
+#endif /* DATAB_CACHE */
+
+         bsz_L2_sram_a ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L2_bsz) $LIBRARIES_CORE_A(L2_bsz))
+        } >mem_a_l2_sram
+
+        l2_sram_a
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L2_sram) $LIBRARIES_CORE_A(L2_sram))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l2_sram) $LIBRARIES_CORE_A(l2_sram))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L2_sram_a) $LIBRARIES_CORE_A(L2_sram_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(l2_sram_a) $LIBRARIES_CORE_A(l2_sram_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(L2_data) $LIBRARIES_CORE_A(L2_data))
+#if defined (__MEMINIT__) && !defined(USE_SDRAM)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(bsz_init) $LIBRARIES_CORE_A(bsz_init))
+#endif
+#if defined(USE_L2_HEAP) && defined(USE_L2_STACK)
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = STACKHEAP_SIZE,4)
+#elif defined(USE_L2_HEAP) 
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = HEAP_SIZE,4)
+#elif defined(USE_L2_STACK)
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = STACK_SIZE,4)
+#endif
+            INPUT_SECTIONS( $OBJECTS_CORE_A(noncache_code) $LIBRARIES_CORE_A(noncache_code))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_A(program))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_A(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb) $LIBRARIES_CORE_A(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_code) $LIBRARIES_CORE_A(cplb_code))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_A(data1))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_A(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(voldata) $LIBRARIES_CORE_A(voldata))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(vtbl) $LIBRARIES_CORE_A(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.rtti) $LIBRARIES_CORE_A(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.edt) $LIBRARIES_CORE_A(.edt))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(.cht) $LIBRARIES_CORE_A(.cht))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(constdata) $LIBRARIES_CORE_A(constdata))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(program) $LIBRARIES_CORE_A(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(data1) $LIBRARIES_CORE_A(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_data) $LIBRARIES_CORE_A(cplb_data))
+        } >mem_a_l2_sram
+
+
+         l2_bsz_sram_a ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(bsz) $LIBRARIES_CORE_A(bsz))
+        } >mem_a_l2_sram
+
+#if defined (__MEMINIT__) && !defined(USE_SDRAM)
+        .meminit { ALIGN(4) } >mem_a_l2_sram
+#endif
+
+#if defined(USE_L2_STACK) || defined(USE_L2_HEAP)
+   stack_and_heap_L2_sram
+   {
+      INPUT_SECTION_ALIGN(4)
+#if !(defined(__MEMINIT__) && !defined(USE_SDRAM))
+      RESERVE_EXPAND(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length,0,4)
+#endif
+#if defined(USE_L2_STACK) && defined(USE_L2_HEAP)
+      ldf_stack_space = stack_and_heap_in_L2_sram;
+      ldf_stack_end = (ldf_stack_space + (stack_and_heap_in_L2_sram_length * STACK_SIZE)/ STACKHEAP_SIZE - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_L2_sram_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_L2_STACK)
+      ldf_stack_space = stack_and_heap_in_L2_sram;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_L2_sram_length;
+#elif defined(USE_L2_HEAP)
+      ldf_heap_space = stack_and_heap_in_L2_sram;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_L2_sram_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_a_l2_sram
+#endif
+
+
+        primio_atomic_lock
+        {
+
+            // Contains data shared between cores - Requires use of resolve.
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS($OBJECTS_CORE_A(l2_shared) $LIBRARIES_CORE_A(l2_shared))
+
+            // Holds control variable used to ensure atomic file I/O
+            // Must be in shared memory and NOT cached.
+            INPUT_SECTIONS($OBJECTS_CORE_A(primio_atomic_lock) $LIBRARIES_CORE_A(primio_atomic_lock))
+        } >mem_l2_shared
+#if defined (USE_SDRAM)
+
+#if (defined(USE_SDRAM_STACK) || defined(USE_SDRAM_HEAP)) && \
+    (!DATAA_CACHE && !DATAB_CACHE)
+#   warning Putting stack/heap into external sdram without data cache enabled can have a serious performance impact
+#endif
+
+       sdram0_bank0
+       {
+#if defined(USE_SDRAM_STACK) && defined(USE_SDRAM_HEAP)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = STACKHEAP_SIZE,4)
+#elif defined(USE_SDRAM_STACK)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = STACK_SIZE,4)
+#elif defined(USE_SDRAM_HEAP)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = HEAP_SIZE,4)
+#else
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_A(sdram0) $LIBRARIES_CORE_A(sdram0))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(noncache_code) $LIBRARIES_CORE_A(noncache_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_A(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_code) $LIBRARIES_CORE_A(cplb_code))
+#endif
+       } >mem_sdram0_bank0
+
+#if defined(USE_SDRAM_STACK) || defined(USE_SDRAM_HEAP)
+    stack_heap_sdram
+   {
+          INPUT_SECTION_ALIGN(4)
+          RESERVE_EXPAND(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length,0,4)
+#if defined(USE_SDRAM_STACK) && defined(USE_SDRAM_HEAP)
+          ldf_stack_space = stack_and_heap_in_sdram;
+          ldf_stack_end = (ldf_stack_space + ((stack_and_heap_in_sdram_length * STACK_SIZE)/ STACKHEAP_SIZE) - 4 ) & 0xfffffffc;
+          ldf_heap_space = ldf_stack_end + 4;
+          ldf_heap_end = ldf_stack_space + stack_and_heap_in_sdram_length;
+          ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_SDRAM_STACK)
+          ldf_stack_space = stack_and_heap_in_sdram;
+          ldf_stack_end = ldf_stack_space + stack_and_heap_in_sdram_length;
+#elif defined(USE_SDRAM_HEAP)
+          ldf_heap_space = stack_and_heap_in_sdram;
+          ldf_heap_end = ldf_heap_space + stack_and_heap_in_sdram_length;
+          ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } >mem_sdram0_bank0
+#endif /* USE_SDRAM_STACK || USE_SDRAM_HEAP */
+
+       sdram0_bank1
+       {
+          // Data
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_A(sdram_data) $LIBRARIES_CORE_A(sdram_data))
+          INPUT_SECTIONS($OBJECTS_CORE_A(data1) $LIBRARIES_CORE_A(data1))
+          INPUT_SECTIONS($OBJECTS_CORE_A(voldata) $LIBRARIES_CORE_A(voldata))
+          INPUT_SECTIONS( $OBJECTS_CORE_A(vtbl) $LIBRARIES_CORE_A(vtbl) )
+          INPUT_SECTIONS( $OBJECTS_CORE_A(.rtti) $LIBRARIES_CORE_A(.rtti) )
+          INPUT_SECTIONS( $OBJECTS_CORE_A(.edt) $LIBRARIES_CORE_A(.edt))
+          INPUT_SECTIONS( $OBJECTS_CORE_A(.cht) $LIBRARIES_CORE_A(.cht))
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS( $OBJECTS_CORE_A(cplb_data) $LIBRARIES_CORE_A(cplb_data))
+       } >mem_sdram0_bank1
+
+		 sdram0_bank1_bsz ZERO_INIT
+       {
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS( $OBJECTS_CORE_A(sdram_bsz) $LIBRARIES_CORE_A(sdram_bsz))
+          INPUT_SECTIONS( $OBJECTS_CORE_A(bsz) $LIBRARIES_CORE_A(bsz))
+       } >mem_sdram0_bank1
+
+        sdram0_bank2
+        {
+          // Data
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_A(sdram_data) $LIBRARIES_CORE_A(sdram_data))
+          INPUT_SECTIONS($OBJECTS_CORE_A(constdata) $LIBRARIES_CORE_A(constdata))
+#if defined(__MEMINIT__)
+          INPUT_SECTIONS( $OBJECTS_CORE_A(bsz_init) $LIBRARIES_CORE_A(bsz_init))
+#endif
+        } > mem_sdram0_bank2
+
+        sdram0_bank2_bsz ZERO_INIT
+        {
+          // Bsz
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_A(sdram_bsz) $LIBRARIES_CORE_A(sdram_bsz))
+          INPUT_SECTIONS($OBJECTS_CORE_A(bsz) $LIBRARIES_CORE_A(bsz))
+        } > mem_sdram0_bank2
+
+#if defined(__MEMINIT__)
+        .meminit { ALIGN(4) } >mem_sdram0_bank2
+#endif
+        sdram0_bank3
+        {
+          // Program Section
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS( $OBJECTS_CORE_A(program) $LIBRARIES_CORE_A(program))
+          INPUT_SECTIONS( $OBJECTS_CORE_A(noncache_code) $LIBRARIES_CORE_A(noncache_code))
+        } >mem_sdram0_bank3
+
+        sdram_shared 
+       {
+         // Shared section of SDRAM for both cores.
+         INPUT_SECTION_ALIGN(4)
+         INPUT_SECTIONS( $OBJECTS_CORE_A(sdram_shared))
+
+         // Holds control variable used to ensure atomic file I/O
+         // Must be in shared memory and NOT cached.
+         INPUT_SECTIONS( $LIBRARIES_CORE_A(primio_atomic_lock))
+       } >mem_sdram1_shared
+
+#endif /* USE_SDRAM */
+    }
+
+}
+#endif
+
+/* Core B */
+#ifdef COREB
+PROCESSOR p1
+{
+   OUTPUT( $COMMAND_LINE_OUTPUT_FILE )
+   RESOLVE(start,0xFF600000)
+
+   /* Issue resolve statement for shared symbols mapped in CoreA. Below
+   ** is an example of how to do that.
+   */
+#if defined(OTHERCORE)               /* OTHERCORE is a macro defined to 1
+                                     ** which should be redefined in 
+                                     ** local_shared_symbols.h
+                                     */
+#  include "local_shared_symbols.h"  /* local application symbols */
+#else
+#warning OTHERCORE has not been defined. Shared symbols might not get resolved.
+#warning Please consult Chapter 5 of the VisualDSP++ C/C++ Compiler and Libraries Manual.
+
+#endif /* OTHERCORE */
+
+   KEEP(start,_main)
+   KEEP(_kMaxNumThreads__3VDK)
+   KEEP(_kMaxNumActiveSemaphores__3VDK)
+   KEEP(_g_Sem_ThreadBaseOffset__3VDK)
+   KEEP(_kMaxNumActiveDevFlags__3VDK)
+   KEEP(_kMaxNumActiveMessages__3VDK)
+   KEEP(_kMaxNumActiveMemoryPools__3VDK)
+   KEEP(_kNumEvents__3VDK)
+   KEEP(_kNumEventBits__3VDK)
+
+    SECTIONS
+    {
+#if defined(__WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES) /* { */
+    /* Workaround for hardware errata 05-00-0189 and 05-00-0310 -
+    ** "Speculative (and fetches made at boundary of reserved memory
+    ** space) for instruction or data fetches may cause false
+    ** protection exceptions" and "False hardware errors caused by
+    ** fetches at the boundary of reserved memory ".
+    **
+    ** Done by avoiding use of 76 bytes from at the end of blocks
+    ** that are adjacent to reserved memory. Workaround is enabled
+    ** for appropriate silicon revisions (-si-revision switch).
+    */
+    RESERVE(___wabb0=0xFF700FFF - 75,___lb0=76)   /* scratchpad */
+#  if !INSTR_CACHE
+    RESERVE(___wabb1=0xFF613FFF - 75,___lb1=76)   /* l1 instr sram/cache */
+#  endif
+    RESERVE(___wabb2=0xFF603FFF - 75,___lb2=76)   /* l1 instr sram */
+#  if DATAB_CACHE
+    RESERVE(___wabb3=0xFF503FFF - 75,___lb3=76)   /* data B sram */
+#  else
+    RESERVE(___wabb4=0xFF507FFF - 75,___lb4=76)   /* data B sram/cache */
+#  endif
+#  if DATAA_CACHE
+    RESERVE(___wabb5=0xFF403FFF - 75,___lb5=76)   /* data A sram */
+#  else
+    RESERVE(___wabb6=0xFF407FFF - 75,___lb6=76)   /* data A sram/cache */
+#  endif
+#   if 0
+    /*  L2 block end memory reserved for second stage loader above */
+    RESERVE(___wabb7=0xFEB1FFFF - 75,___lb7=76)   /* L2 sram */
+#   endif
+    RESERVE(___waba9=0x3FFFFFF - 75,___la9=76)    /* EZ-Kit sdram */
+#endif /*} __WORKAROUND_AVOID_LDF_BLOCK_BOUNDARIES */
+
+   L1_scratchpad NO_INIT
+   {
+      INPUT_SECTION_ALIGN(4)
+      INPUT_SECTIONS($OBJS(L1_scratchpad) $LIBS(L1_scratchpad))
+   } > mem_b_l1_scratch 
+
+#if defined(USE_SCRATCHPAD_STACK) || defined(USE_SCRATCHPAD_HEAP)
+   stack_and_heap_scratchpad
+   {
+      INPUT_SECTION_ALIGN(4)
+      RESERVE(stack_and_heap_in_scratchpad, stack_and_heap_in_scratchpad_length,4)
+#if defined(USE_SCRATCHPAD_STACK) && defined(USE_SCRATCHPAD_HEAP)
+      ldf_stack_space = stack_and_heap_in_scratchpad;
+      ldf_stack_end = (ldf_stack_space + ((stack_and_heap_in_scratchpad_length *STACK_SIZE) / STACKHEAP_SIZE) - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_SCRATCHPAD_STACK)
+      ldf_stack_space = stack_and_heap_in_scratchpad;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_scratchpad_length;
+#elif defined(USE_SCRATCHPAD_HEAP)
+      ldf_heap_space = stack_and_heap_in_scratchpad;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_scratchpad_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_b_l1_scratch
+#endif
+        sec_program
+        {
+            INPUT_SECTION_ALIGN(4)
+            __CORE = 1;
+            INPUT_SECTIONS( $LIBRARIES_CORE_B(VDK_ISR_code) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_code) $LIBRARIES_CORE_B(L1_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb) $LIBRARIES_CORE_B(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_code) $LIBRARIES_CORE_B(cplb_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(noncache_code) $LIBRARIES_CORE_B(noncache_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_B(program))
+        } >mem_b_l1_code
+
+        l1_code
+        {
+#if INSTR_CACHE /* { */
+                ___l1_code_cache = 1;
+#else
+                ___l1_code_cache = 0;
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $LIBRARIES_CORE_B(VDK_ISR_code) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_code) $LIBRARIES_CORE_B(L1_code))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb) $LIBRARIES_CORE_B(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_code) $LIBRARIES_CORE_B(cplb_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_B(program))
+#endif /* INSTR_CACHE } */
+        } >mem_b_l1_code_cache
+
+         bsz_L1_data_a ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_bsz) $LIBRARIES_CORE_B(L1_bsz))
+        } >mem_b_l1_data_a
+
+        L1_data_a_1
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l1_data_a) $LIBRARIES_CORE_B(l1_data_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_data_a) $LIBRARIES_CORE_B(L1_data_a))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l1_data) $LIBRARIES_CORE_B(l1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_data) $LIBRARIES_CORE_B(L1_data))
+				INPUT_SECTIONS( $OBJECTS_CORE_B(vtbl) $LIBRARIES_CORE_B(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.frt) $LIBRARIES_CORE_B(.frt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.frtl) $LIBRARIES_CORE_B(.frtl) )
+#if !DATAA_CACHE
+            ___l1_data_cache_a = 0;
+#endif
+        } >mem_b_l1_data_a
+
+        L1_data_a_tables
+        {
+            INPUT_SECTION_ALIGN(4)
+            FORCE_CONTIGUITY
+            INPUT_SECTIONS( $OBJECTS_CORE_B(ctor) $LIBRARIES_CORE_B(ctor) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(ctorl) $LIBRARIES_CORE_B(ctorl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.gdt) $LIBRARIES_CORE_B(.gdt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.gdtl) $LIBRARIES_CORE_B(.gdtl) )
+        } >mem_b_l1_data_a
+
+        L1_data_a
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.rtti) $LIBRARIES_CORE_B(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.edt) $LIBRARIES_CORE_B(.edt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.cht) $LIBRARIES_CORE_B(.cht) )
+            INPUT_SECTIONS($OBJECTS_CORE_B(voldata) $LIBRARIES_CORE_B(voldata))
+            INPUT_SECTIONS($OBJECTS_CORE_B(constdata) $LIBRARIES_CORE_B(constdata))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_B(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_data) $LIBRARIES_CORE_B(cplb_data))
+        } >mem_b_l1_data_a
+
+        l1_data_a_bsz ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(bsz) $LIBRARIES_CORE_B(bsz))
+        } >mem_b_l1_data_a
+
+         bsz_L1_data_b ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_bsz) $LIBRARIES_CORE_B(L1_bsz))
+        } >mem_b_l1_data_b
+
+		  L1_data_b
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l1_data_b) $LIBRARIES_CORE_B(l1_data_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_data_b) $LIBRARIES_CORE_B(L1_data_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l1_data) $LIBRARIES_CORE_B(l1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L1_data) $LIBRARIES_CORE_B(L1_data))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(voldata) $LIBRARIES_CORE_B(voldata))
+#if USE_L1_DATA_HEAP && USE_L1_DATA_STACK
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = STACKHEAP_SIZE,4)
+#elif USE_L1_DATA_HEAP 
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = HEAP_SIZE,4)
+#elif USE_L1_DATA_STACK
+            RESERVE(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length = STACK_SIZE,4)
+#endif
+            INPUT_SECTIONS( $OBJECTS_CORE_B(constdata) $LIBRARIES_CORE_B(constdata))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_B(data1))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_B(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(vtbl) $LIBRARIES_CORE_B(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.rtti) $LIBRARIES_CORE_B(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.edt) $LIBRARIES_CORE_B(.edt) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.cht) $LIBRARIES_CORE_B(.cht) )
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(data1) $LIBRARIES_CORE_B(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_data) $LIBRARIES_CORE_B(cplb_data))
+        } >mem_b_l1_data_b
+
+         l1_data_b_bsz ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(bsz) $LIBRARIES_CORE_B(bsz))
+        } >mem_b_l1_data_b
+
+#if USE_L1_DATA_STACK || USE_L1_DATA_HEAP
+   stack_and_heap_L1_data_b
+   {
+      INPUT_SECTION_ALIGN(4)
+      RESERVE_EXPAND(stack_and_heap_in_L1_data_b, stack_and_heap_in_L1_data_b_length,0,4)
+#if USE_L1_DATA_STACK && USE_L1_DATA_HEAP
+      ldf_stack_space = stack_and_heap_in_L1_data_b;
+      ldf_stack_end = (ldf_stack_space + (stack_and_heap_in_L1_data_b_length * STACK_SIZE)/ STACKHEAP_SIZE - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_L1_data_b_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif USE_L1_DATA_STACK
+      ldf_stack_space = stack_and_heap_in_L1_data_b;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_L1_data_b_length;
+#elif USE_L1_DATA_HEAP
+      ldf_heap_space = stack_and_heap_in_L1_data_b;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_L1_data_b_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_b_l1_data_b
+#endif
+
+
+#if DATAA_CACHE 
+        l1_data_a
+        {
+            INPUT_SECTION_ALIGN(4)
+            ___l1_data_cache_a = 1;
+        } >mem_b_l1_data_a_cache
+#endif /* DATAA_CACHE */
+
+#if DATAB_CACHE 
+        l1_data_b
+        {
+            INPUT_SECTION_ALIGN(4)
+            ___l1_data_cache_b = 1;
+        } >mem_b_l1_data_b_cache
+#endif /* DATAB_CACHE */
+
+         bsz_L2_sram_b ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L2_bsz) $LIBRARIES_CORE_B(L2_bsz))
+        } >mem_b_l2_sram
+
+        l2_sram_b
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L2_sram) $LIBRARIES_CORE_B(L2_sram))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l2_sram) $LIBRARIES_CORE_B(l2_sram))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L2_sram_b) $LIBRARIES_CORE_B(L2_sram_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(l2_sram_b) $LIBRARIES_CORE_B(l2_sram_b))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(L2_data) $LIBRARIES_CORE_B(L2_data))
+#if defined (__MEMINIT__) && !defined(USE_SDRAM)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(bsz_init) $LIBRARIES_CORE_B(bsz_init))
+#endif
+#if defined(USE_L2_HEAP) && defined(USE_L2_STACK)
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = STACKHEAP_SIZE,4)
+#elif defined(USE_L2_HEAP) 
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = HEAP_SIZE,4)
+#elif defined(USE_L2_STACK)
+            RESERVE(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length = STACK_SIZE,4)
+#endif
+            INPUT_SECTIONS( $OBJECTS_CORE_B(noncache_code) $LIBRARIES_CORE_B(noncache_code))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_B(program))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_B(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb) $LIBRARIES_CORE_B(cplb))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_code) $LIBRARIES_CORE_B(cplb_code))
+            INPUT_SECTIONS( $OBJS_LIBS_INTERNAL_CORE_B(data1))
+            INPUT_SECTIONS( $OBJS_LIBS_NOT_EXTERNAL_CORE_B(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(voldata) $LIBRARIES_CORE_B(voldata))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(vtbl) $LIBRARIES_CORE_B(vtbl) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.rtti) $LIBRARIES_CORE_B(.rtti) )
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.edt) $LIBRARIES_CORE_B(.edt))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(.cht) $LIBRARIES_CORE_B(.cht))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(constdata) $LIBRARIES_CORE_B(constdata))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(program) $LIBRARIES_CORE_B(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(data1) $LIBRARIES_CORE_B(data1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_data) $LIBRARIES_CORE_B(cplb_data))
+        } >mem_b_l2_sram
+
+
+
+         l2_bsz_sram_b ZERO_INIT
+        {
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(bsz) $LIBRARIES_CORE_B(bsz))
+        } >mem_b_l2_sram
+
+#if defined (__MEMINIT__) && !defined(USE_SDRAM)
+        .meminit { ALIGN(4) } >mem_b_l2_sram
+#endif
+
+#if defined(USE_L2_STACK) || defined(USE_L2_HEAP)
+   stack_and_heap_L2_sram
+   {
+      INPUT_SECTION_ALIGN(4)
+#if !(defined(__MEMINIT__) && !defined(USE_SDRAM))
+      RESERVE_EXPAND(stack_and_heap_in_L2_sram, stack_and_heap_in_L2_sram_length,0,4)
+#endif
+#if defined(USE_L2_STACK) && defined(USE_L2_HEAP)
+      ldf_stack_space = stack_and_heap_in_L2_sram;
+      ldf_stack_end = (ldf_stack_space + (stack_and_heap_in_L2_sram_length * STACK_SIZE)/ STACKHEAP_SIZE - 4 ) & 0xfffffffc;
+      ldf_heap_space = ldf_stack_end + 4;
+      ldf_heap_end = ldf_stack_space + stack_and_heap_in_L2_sram_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_L2_STACK)
+      ldf_stack_space = stack_and_heap_in_L2_sram;
+      ldf_stack_end = ldf_stack_space + stack_and_heap_in_L2_sram_length;
+#elif defined(USE_L2_HEAP)
+      ldf_heap_space = stack_and_heap_in_L2_sram;
+      ldf_heap_end = ldf_heap_space + stack_and_heap_in_L2_sram_length;
+      ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } > mem_b_l2_sram
+#endif
+
+
+#if defined (USE_SDRAM)
+
+#if (defined(USE_SDRAM_STACK) || defined(USE_SDRAM_HEAP)) && \
+    (!DATAA_CACHE && !DATAB_CACHE)
+#   warning Putting stack/heap into external sdram without data cache enabled can have a serious performance impact
+#endif
+
+       sdram1_bank0
+       {
+#if defined(USE_SDRAM_STACK) && defined(USE_SDRAM_HEAP)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = STACKHEAP_SIZE,4)
+#elif defined(USE_SDRAM_STACK)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = STACK_SIZE,4)
+#elif defined(USE_SDRAM_HEAP)
+            RESERVE(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length = HEAP_SIZE,4)
+#else
+            INPUT_SECTION_ALIGN(4)
+            INPUT_SECTIONS( $OBJECTS_CORE_B(sdram1) $LIBRARIES_CORE_B(sdram1))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(noncache_code) $LIBRARIES_CORE_B(noncache_code))
+            INPUT_SECTIONS( $INPUT_BY_MEM_TYPE_CORE_B(program))
+            INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_code) $LIBRARIES_CORE_B(cplb_code))
+#endif
+       } >mem_sdram1_bank0
+
+#if defined(USE_SDRAM_STACK) || defined(USE_SDRAM_HEAP)
+    stack_heap_sdram
+   {
+          INPUT_SECTION_ALIGN(4)
+          RESERVE_EXPAND(stack_and_heap_in_sdram, stack_and_heap_in_sdram_length,0,4)
+#if defined(USE_SDRAM_STACK) && defined(USE_SDRAM_HEAP)
+          ldf_stack_space = stack_and_heap_in_sdram;
+          ldf_stack_end = (ldf_stack_space + ((stack_and_heap_in_sdram_length * STACK_SIZE)/ STACKHEAP_SIZE) - 4 ) & 0xfffffffc;
+          ldf_heap_space = ldf_stack_end + 4;
+          ldf_heap_end = ldf_stack_space + stack_and_heap_in_sdram_length;
+          ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#elif defined(USE_SDRAM_STACK)
+          ldf_stack_space = stack_and_heap_in_sdram;
+          ldf_stack_end = ldf_stack_space + stack_and_heap_in_sdram_length;
+#elif defined(USE_SDRAM_HEAP)
+          ldf_heap_space = stack_and_heap_in_sdram;
+          ldf_heap_end = ldf_heap_space + stack_and_heap_in_sdram_length;
+          ldf_heap_length = ldf_heap_end - ldf_heap_space;
+#endif
+   } >mem_sdram1_bank0
+#endif /* USE_SDRAM_STACK || USE_SDRAM_HEAP */
+
+        sdram1_bank1
+        {
+          // Data
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_B(sdram_data) $LIBRARIES_CORE_B(sdram_data))
+          INPUT_SECTIONS($OBJECTS_CORE_B(data1) $LIBRARIES_CORE_B(data1))
+          INPUT_SECTIONS($OBJECTS_CORE_B(voldata) $LIBRARIES_CORE_B(voldata))
+          INPUT_SECTIONS( $OBJECTS_CORE_B(vtbl) $LIBRARIES_CORE_B(vtbl) )
+          INPUT_SECTIONS( $OBJECTS_CORE_B(.rtti) $LIBRARIES_CORE_B(.rtti) )
+          INPUT_SECTIONS( $OBJECTS_CORE_B(.edt) $LIBRARIES_CORE_B(.edt))
+          INPUT_SECTIONS( $OBJECTS_CORE_B(.cht) $LIBRARIES_CORE_B(.cht))
+          INPUT_SECTIONS( $OBJECTS_CORE_B(cplb_data) $LIBRARIES_CORE_B(cplb_data))
+        } >mem_sdram1_bank1
+
+		 sdram1_bank1_bsz ZERO_INIT
+       {
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS( $OBJECTS_CORE_B(sdram_bsz) $LIBRARIES_CORE_B(sdram_bsz))
+          INPUT_SECTIONS( $OBJECTS_CORE_B(bsz) $LIBRARIES_CORE_B(bsz))
+       } >mem_sdram1_bank1
+
+
+        sdram1_bank2
+        {
+          // Data
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_B(sdram_data) $LIBRARIES_CORE_B(sdram_data))
+          INPUT_SECTIONS($OBJECTS_CORE_B(constdata) $LIBRARIES_CORE_B(constdata))
+#if defined(__MEMINIT__)
+          INPUT_SECTIONS( $OBJECTS_CORE_B(bsz_init) $LIBRARIES_CORE_B(bsz_init))
+#endif
+        } > mem_sdram1_bank2
+
+        sdram1_bank2_bsz ZERO_INIT
+        {
+          // Bsz
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS($OBJECTS_CORE_B(sdram_bsz) $LIBRARIES_CORE_B(sdram_bsz))
+          INPUT_SECTIONS($OBJECTS_CORE_B(bsz) $LIBRARIES_CORE_B(bsz))
+        } > mem_sdram1_bank2
+
+#if defined(__MEMINIT__)
+        .meminit { ALIGN(4) } >mem_sdram1_bank2
+#endif
+        sdram1_bank3
+        {
+          // Program Section
+          INPUT_SECTION_ALIGN(4)
+          INPUT_SECTIONS( $OBJECTS_CORE_B(program) $LIBRARIES_CORE_B(program))
+          INPUT_SECTIONS( $OBJECTS_CORE_B(noncache_code) $LIBRARIES_CORE_B(noncache_code))
+        } >mem_sdram1_bank3
+#endif /* USE_SDRAM */
+
+    }
+
+}
+#endif

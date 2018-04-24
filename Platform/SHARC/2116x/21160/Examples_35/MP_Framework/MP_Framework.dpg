@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding='ISO-8859-1'?>
+<visualdsp-project-group generated="Wed Aug 25 13:37:31 2004" version="1.0.0.0" active-project="CoreB_21160">
+	<project name="CoreA_21160" file=".\CoreA\CoreA_21160.dpj">
+	</project>
+	<project name="CoreB_21160" file=".\CoreB\CoreB_21160.dpj">
+		<dependencies>
+			<dependent-project>CoreA_21160</dependent-project>
+		</dependencies>
+	</project>
+</visualdsp-project-group>

@@ -1,0 +1,276 @@
+/*
+** Default LDF for a VDK project on the ADSP-21065L.
+*/
+
+// Setup the architecture
+ARCHITECTURE(ADSP-21065L)
+
+//
+// ADSP-21065L Memory Map:
+//   ------------------------------------------------
+//   Internal memory  0x0000 0000 to 0x0007 ffff
+//   ------------------------------------------------
+//                    0x0000 0000 to 0x0000 00ff  IOP Regs
+//                    0x0000 0100 to 0x0000 01ff  IOP Regs of Processor ID 001
+//                    0x0000 0200 to 0x0000 02ff  IOP Regs of Processor ID 002
+//                    0x0000 0300 to 0x0000 07ff  Reserved
+//           Block 0  0x0000 8000 to 0x0000 9fff  Normal Word (32/48) Addresses
+//                   (0x0000 8000 to 0x0000 97ff) 48-bit words
+//                   (0x0000 8000 to 0x0000 9fff) 32-bit words
+//					  0x0000 A000 to 0x0000 Bfff  Reserved
+//           Block 1  0x0000 C000 to 0x0000 Dfff  Normal Word (32/48) Addresses
+//                   (0x0000 C000 to 0x0000 Cfff) 48-bit words
+//                   (0x0000 C000 to 0x0000 Dfff) 32-bit words
+//					  0x0000 E000 to 0x0000 ffff  Reserved
+//           Block 0  0x0001 0000 to 0x0001 3fff  Short Word (16) Addresses
+//					  0x0001 4000 to 0x0001 7fff  Reserved
+//           Block 1  0x0001 8000 to 0x0001 Bfff  Short Word (16) Addresses
+//					  0x0001 C000 to 0x0001 ffff  Reserved
+//   ------------------------------------------------
+//   External memory  0x0002 0000 to 0x03ff ffff
+//   ------------------------------------------------
+//   External Bank 0  0x0002 0000 to 0x00ff ffff
+//   External Bank 1  0x0100 0000 to 0x01ff ffff
+//   External Bank 2  0x0200 0000 to 0x02ff ffff
+//   External Bank 3  0x0300 0000 to 0x03ff ffff
+//
+
+SEARCH_DIR( $ADI_DSP/21k/lib )
+
+#define VDK_LDF_
+#include "VDK.h"
+
+#if defined(__LIBIO_LITE)
+# define LIBIOMT libio_litemt.dlb
+#elif defined(__LIBIO_FX)
+# define LIBIOMT libio_fxmt.dlb  /* Fast IO and host IO with fixed-point support              */
+#else
+# define LIBIOMT libiomt.dlb
+#endif
+
+#ifdef __ADI_LIBEH__
+$BASE_LIBRARIES = libcmt.dlb, libdsp.dlb, LIBIOMT, libcppehmt.dlb;
+#else
+$BASE_LIBRARIES = libcmt.dlb, libdsp.dlb, LIBIOMT, libcppmt.dlb;
+#endif
+
+
+#if VDK_INSTRUMENTATION_LEVEL_==2
+#define VDK_IFLAG_ i
+#elif VDK_INSTRUMENTATION_LEVEL_==1
+#define VDK_IFLAG_ e
+#else
+#define VDK_IFLAG_ n
+#endif
+
+
+// The VDK lib for 21065 are the same as 21060 
+#define VDK_LIB_NAME_MACRO_(x) vdk- ## x ## -2106X.dlb
+#define VDK_LIB_NAME_(x) VDK_LIB_NAME_MACRO_(x)
+$LIBS = TMK-210XX.dlb, VDK-CORE-21065.dlb, VDK_LIB_NAME_(VDK_IFLAG_), $BASE_LIBRARIES;
+
+
+// Libraries from the command line are included in COMMAND_LINE_OBJECTS.
+
+#ifndef CRT_HDR
+  #define CRT_HDR 060_cpp_hdr_mt.doj
+#endif
+
+$OBJS = CRT_HDR, $COMMAND_LINE_OBJECTS;
+
+PROCESSOR p0
+{
+
+  KEEP( _main,___ctor_NULL_marker,___lib_end_of_heap_descriptions )
+  KEEP(_kMaxNumThreads__3VDK,_kMaxNumActiveSemaphores__3VDK,
+        _g_Sem_ThreadBaseOffset__3VDK ,_kMaxNumActiveDevFlags__3VDK ,
+        _kMaxNumActiveMessages__3VDK,  _kMaxNumActiveMemoryPools__3VDK,
+        _kNumEvents__3VDK, _kNumEventBits__3VDK, tmk_RescheduleISRVector)
+  LINK_AGAINST( $COMMAND_LINE_LINK_AGAINST)
+  OUTPUT( $COMMAND_LINE_OUTPUT_FILE )
+
+  MEMORY
+  {
+    seg_RESV1  { TYPE(PM RAM) START(0x00008000) END(0x00008003) WIDTH(48) }
+    seg_RSTI   { TYPE(PM RAM) START(0x00008004) END(0x00008007) WIDTH(48) }
+    seg_RESV2  { TYPE(PM RAM) START(0x00008008) END(0x0000800b) WIDTH(48) }
+    seg_SOVFI  { TYPE(PM RAM) START(0x0000800c) END(0x0000800f) WIDTH(48) }
+    seg_TMZHI  { TYPE(PM RAM) START(0x00008010) END(0x00008013) WIDTH(48) }
+    seg_VIRPTI { TYPE(PM RAM) START(0x00008014) END(0x00008017) WIDTH(48) }
+    seg_IRQ2I  { TYPE(PM RAM) START(0x00008018) END(0x0000801b) WIDTH(48) }
+    seg_IRQ1I  { TYPE(PM RAM) START(0x0000801c) END(0x0000801f) WIDTH(48) }
+    seg_IRQ0I  { TYPE(PM RAM) START(0x00008020) END(0x00008023) WIDTH(48) }
+    seg_RESV3  { TYPE(PM RAM) START(0x00008024) END(0x00008027) WIDTH(48) }
+    seg_SPR0I  { TYPE(PM RAM) START(0x00008028) END(0x0000802b) WIDTH(48) }
+    seg_SPR1I  { TYPE(PM RAM) START(0x0000802c) END(0x0000802f) WIDTH(48) }
+    seg_SPT0I  { TYPE(PM RAM) START(0x00008030) END(0x00008033) WIDTH(48) }
+    seg_SPT1I  { TYPE(PM RAM) START(0x00008034) END(0x00008037) WIDTH(48) }
+    seg_RESV4  { TYPE(PM RAM) START(0x00008038) END(0x0000803b) WIDTH(48) }
+    seg_RESV5  { TYPE(PM RAM) START(0x0000803c) END(0x0000803f) WIDTH(48) }
+    seg_EP0I   { TYPE(PM RAM) START(0x00008040) END(0x00008043) WIDTH(48) }
+    seg_EP1I   { TYPE(PM RAM) START(0x00008044) END(0x00008047) WIDTH(48) }
+    seg_RESV6  { TYPE(PM RAM) START(0x00008048) END(0x0000804b) WIDTH(48) }
+    seg_RESV7  { TYPE(PM RAM) START(0x0000804c) END(0x0000804f) WIDTH(48) }
+    seg_RESV8  { TYPE(PM RAM) START(0x00008050) END(0x00008053) WIDTH(48) }
+    seg_CB7I   { TYPE(PM RAM) START(0x00008054) END(0x00008057) WIDTH(48) }
+    seg_CB15I  { TYPE(PM RAM) START(0x00008058) END(0x0000805b) WIDTH(48) }
+    seg_TMZLI  { TYPE(PM RAM) START(0x0000805c) END(0x0000805f) WIDTH(48) }
+    seg_FIXI   { TYPE(PM RAM) START(0x00008060) END(0x00008063) WIDTH(48) }
+    seg_FLTOI  { TYPE(PM RAM) START(0x00008064) END(0x00008067) WIDTH(48) }
+    seg_FLTUI  { TYPE(PM RAM) START(0x00008068) END(0x0000806b) WIDTH(48) }
+    seg_FLTII  { TYPE(PM RAM) START(0x0000806c) END(0x0000806f) WIDTH(48) }
+    seg_SFT0I  { TYPE(PM RAM) START(0x00008070) END(0x00008073) WIDTH(48) }
+    seg_SFT1I  { TYPE(PM RAM) START(0x00008074) END(0x00008077) WIDTH(48) }
+    seg_SFT2I  { TYPE(PM RAM) START(0x00008078) END(0x0000807b) WIDTH(48) }
+    seg_SFT3I  { TYPE(PM RAM) START(0x0000807c) END(0x0000807f) WIDTH(48) }
+
+#ifdef __MEMINIT__
+    seg_init   { TYPE(PM RAM) START(0x00008080) END(0x000081ff) WIDTH(48) }
+    seg_pmco   { TYPE(PM RAM) START(0x00008200) END(0x000095ff) WIDTH(48) }
+#else
+    seg_pmco   { TYPE(PM RAM) START(0x00008080) END(0x000095ff) WIDTH(48) }
+#endif
+    seg_pmda   { TYPE(PM RAM) START(0x00009e00) END(0x00009fff) WIDTH(32) }
+
+    seg_dmda   { TYPE(DM RAM) START(0x0000C000) END(0x0000Cfff) WIDTH(32) }
+    seg_heap   { TYPE(DM RAM) START(0x0000D000) END(0x0000D4ff) WIDTH(32) }
+    seg_stack  { TYPE(DM RAM) START(0x0000D500) END(0x0000Dfff) WIDTH(32) }
+  }
+
+
+  SECTIONS
+  {
+    seg_RESV1  { INPUT_SECTIONS( $OBJS(seg_RESV1   ) $LIBS(seg_RESV1 )) } > seg_RESV1 
+    seg_RSTI   { INPUT_SECTIONS( $OBJS(seg_RSTI    ) $LIBS(seg_RSTI  )) } > seg_RSTI  
+    seg_RESV2  { INPUT_SECTIONS( $OBJS(seg_RESV2   ) $LIBS(seg_RESV2 )) } > seg_RESV2 
+    seg_SOVFI  { INPUT_SECTIONS( $OBJS(seg_SOVFI   ) $LIBS(seg_SOVFI )) } > seg_SOVFI 
+    seg_TMZHI  { INPUT_SECTIONS( $OBJS(seg_TMZHI I ) $LIBS(seg_TMZHI )) } > seg_TMZHI 
+    seg_VIRPTI { INPUT_SECTIONS( $OBJS(seg_VIRPTI  ) $LIBS(seg_VIRPTI)) } > seg_VIRPTI
+    seg_IRQ2I  { INPUT_SECTIONS( $OBJS(seg_IRQ2I   ) $LIBS(seg_IRQ2I )) } > seg_IRQ2I 
+    seg_IRQ1I  { INPUT_SECTIONS( $OBJS(seg_IRQ1I   ) $LIBS(seg_IRQ1I )) } > seg_IRQ1I 
+    seg_IRQ0I  { INPUT_SECTIONS( $OBJS(seg_IRQ0I   ) $LIBS(seg_IRQ0I )) } > seg_IRQ0I 
+    seg_RESV3  { INPUT_SECTIONS( $OBJS(seg_RESV3   ) $LIBS(seg_RESV3 )) } > seg_RESV3 
+    seg_SPR0I  { INPUT_SECTIONS( $OBJS(seg_SPR0I   ) $LIBS(seg_SPR0I )) } > seg_SPR0I 
+    seg_SPR1I  { INPUT_SECTIONS( $OBJS(seg_SPR1I   ) $LIBS(seg_SPR1I )) } > seg_SPR1I 
+    seg_SPT0I  { INPUT_SECTIONS( $OBJS(seg_SPT0I   ) $LIBS(seg_SPT0I )) } > seg_SPT0I 
+    seg_SPT1I  { INPUT_SECTIONS( $OBJS(seg_SPT1I   ) $LIBS(seg_SPT1I )) } > seg_SPT1I 
+    seg_RESV4  { INPUT_SECTIONS( $OBJS(seg_RESV4   ) $LIBS(seg_RESV4 )) } > seg_RESV4 
+    seg_RESV5  { INPUT_SECTIONS( $OBJS(seg_RESV5   ) $LIBS(seg_RESV5 )) } > seg_RESV5 
+    seg_EP0I   { INPUT_SECTIONS( $OBJS(seg_EP0I    ) $LIBS(seg_EP0I  )) } > seg_EP0I  
+    seg_EP1I   { INPUT_SECTIONS( $OBJS(seg_EP1I    ) $LIBS(seg_EP1I  )) } > seg_EP1I  
+    seg_RESV6  { INPUT_SECTIONS( $OBJS(seg_RESV6   ) $LIBS(seg_RESV6 )) } > seg_RESV6 
+    seg_RESV7  { INPUT_SECTIONS( $OBJS(seg_RESV7   ) $LIBS(seg_RESV7 )) } > seg_RESV7 
+    seg_RESV8  { INPUT_SECTIONS( $OBJS(seg_RESV8   ) $LIBS(seg_RESV8 )) } > seg_RESV8 
+    seg_CB7I   { INPUT_SECTIONS( $OBJS(seg_CB7I    ) $LIBS(seg_CB7I  )) } > seg_CB7I  
+    seg_CB15I  { INPUT_SECTIONS( $OBJS(seg_CB15I   ) $LIBS(seg_CB15I )) } > seg_CB15I 
+    seg_TMZLI  { INPUT_SECTIONS( $OBJS(seg_TMZLI   ) $LIBS(seg_TMZLI )) } > seg_TMZLI 
+    seg_FIXI   { INPUT_SECTIONS( $OBJS(seg_FIXI    ) $LIBS(seg_FIXI  )) } > seg_FIXI  
+    seg_FLTOI  { INPUT_SECTIONS( $OBJS(seg_FLTOI   ) $LIBS(seg_FLTOI )) } > seg_FLTOI 
+    seg_FLTUI  { INPUT_SECTIONS( $OBJS(seg_FLTUI   ) $LIBS(seg_FLTUI )) } > seg_FLTUI 
+    seg_FLTII  { INPUT_SECTIONS( $OBJS(seg_FLTII   ) $LIBS(seg_FLTII )) } > seg_FLTII 
+    seg_SFT0I  { INPUT_SECTIONS( $OBJS(seg_SFT0I   ) $LIBS(seg_SFT0I )) } > seg_SFT0I 
+    seg_SFT1I  { INPUT_SECTIONS( $OBJS(seg_SFT1I   ) $LIBS(seg_SFT1I )) } > seg_SFT1I 
+    seg_SFT2I  { INPUT_SECTIONS( $OBJS(seg_SFT2I   ) $LIBS(seg_SFT2I )) } > seg_SFT2I 
+    seg_SFT3I  { INPUT_SECTIONS( $OBJS(seg_SFT3I   ) $LIBS(seg_SFT3I )) } > seg_SFT3I 
+
+
+#ifdef __MEMINIT__
+    seg_init
+    {
+        INPUT_SECTIONS( $OBJS(seg_init) $LIBS(seg_init))
+    } > seg_init
+#endif
+
+    seg_pmco
+    {
+        INPUT_SECTIONS( $OBJS(seg_int_code) $LIBS(seg_int_code))
+#ifndef __MEMINIT__
+        INPUT_SECTIONS( $OBJS(seg_init) $LIBS(seg_init))
+#endif
+        INPUT_SECTIONS( $OBJS(seg_pmco) $LIBS(seg_pmco))
+        INPUT_SECTIONS( $OBJS(program) $LIBS(program))
+    } > seg_pmco
+
+    seg_pmda
+    {
+        INPUT_SECTIONS( $OBJS(seg_pmda) $LIBS(seg_pmda))
+    } > seg_pmda
+
+    seg_ctdm
+    {
+        FORCE_CONTIGUITY
+        __ctors = .;    /* points to the start of the section */
+        INPUT_SECTIONS( $OBJS(seg_ctdm) $LIBS(seg_ctdm))
+        INPUT_SECTIONS( $OBJS(seg_ctdml) $LIBS(seg_ctdml))
+    } > seg_dmda
+
+    seg_dmda
+    {
+	// internal_memory_data input section must be in internal memory
+        INPUT_SECTIONS( $OBJS(internal_memory_data) $LIBS(internal_memory_data))
+        INPUT_SECTIONS( $LIBS(seg_int_hooks))
+    } > seg_dmda
+
+    .bss ZERO_INIT
+    {
+        INPUT_SECTIONS( $OBJS(.bss) $LIBS(.bss))
+    } > seg_dmda
+
+    .gdt
+    {
+        FORCE_CONTIGUITY
+        INPUT_SECTIONS( $OBJS(.gdt) $LIBS(.gdt))
+        INPUT_SECTIONS( $OBJS(.gdtl) $LIBS(.gdtl))
+    } > seg_dmda
+
+    .frt
+    {
+        INPUT_SECTIONS( $OBJS(.frt) $LIBS(.frt))
+        INPUT_SECTIONS( $OBJS(.frtl) $LIBS(.frtl))
+    } > seg_dmda
+
+    .cht
+    {
+        INPUT_SECTIONS( $OBJS(.cht) $LIBS(.cht))
+        INPUT_SECTIONS( $OBJS(.chtl) $LIBS(.chtl))
+    } > seg_dmda
+
+    .rtti
+    {
+        INPUT_SECTIONS( $OBJS(.rtti) $LIBS(.rtti))
+    } > seg_dmda
+
+    .edt
+    {
+        INPUT_SECTIONS( $OBJS(.edt) $LIBS(.edt))
+        INPUT_SECTIONS( $OBJS(.edtl) $LIBS(.edtl))
+    } > seg_dmda
+
+    seg_vtbl
+    {
+        INPUT_SECTIONS( $OBJS(seg_vtbl) $LIBS(seg_vtbl))
+    } > seg_dmda
+
+    seg_dmda_1
+    {
+        INPUT_SECTIONS( $OBJS(seg_dmda) $LIBS(seg_dmda))
+        INPUT_SECTIONS( $OBJS(data1) $LIBS(data1))
+        INPUT_SECTIONS( $LIBS(seg_int_hooks))
+    } > seg_dmda
+
+    heap
+    {
+        // allocate a heap for the application
+        ldf_heap_space = .;
+        ldf_heap_length = MEMORY_SIZEOF(seg_heap);
+        ldf_heap_end = ldf_heap_space + ldf_heap_length - 1;    
+        } > seg_heap
+    stackseg
+    {
+        ldf_stack_space = . ;
+        ldf_stack_length =MEMORY_SIZEOF(seg_stack); 
+    } > seg_stack
+
+  }
+
+}

@@ -1,0 +1,60 @@
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=40
+System.Tick Period (ms)=5
+System.History Buffer Size=256
+System.Max Running Threads=10
+System.Instrumented Libraries=true
+[Multiprocessor Info]
+MultiProcInfo0.Multiprocessor Messages Allowed=false
+MultiProcInfo0.Local Processor ID=0
+[Imports]
+Count=0
+[Thread Types]
+Count=1
+ThreadType0.Name=MyThread
+ThreadType0.Priority=5
+ThreadType0.Stack Size=255
+ThreadType0.Source File=MyThread.cpp
+ThreadType0.Header File=MyThread.h
+ThreadType0.Messages Allowed=false
+[Boot Threads]
+Count=1
+BootThread0.Name=TheThread
+BootThread0.Thread Type=MyThread
+[Idle Thread]
+IdleThread.Name=idle
+IdleThread.Stack Size=256
+IdleThread.Heap=system_heap
+[Heaps]
+Count=0
+[Priorities]
+Count=0
+[Semaphores]
+Max Number Active=10
+Count=1
+Semaphore0.Name=TheSemaphore
+Semaphore0.Initial Value=false
+Semaphore0.Initial Delay=0
+Semaphore0.Period=0
+[MemoryPools]
+Max Number Active=1
+Count=0
+[Events]
+Count=1
+Event0.Name=TheEvent
+Event0.Type=Any
+Event0.NumBits=0
+[Event Bits]
+Count=1
+EventBit0.Name=TheEventBit
+EventBit0.Initial Value=0
+[Interrupts]
+Count=0
+[Device Drivers]
+Count=1
+DeviceDriver0.Name=TheDeviceDriver
+DeviceDriver0.Source File=TheDeviceDriver.cpp
+DeviceDriver0.Header File=TheDeviceDriver.h
+DeviceDriver0.NumFlags=1
+DeviceDriver0.Flag0.Name=TheDeviceFlag

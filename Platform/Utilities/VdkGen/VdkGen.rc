@@ -1,0 +1,80 @@
+// Copyright (C) 2001 Analog Devices Inc., All Rights Reserved.
+#include <winver.h>
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+// Version
+//
+
+// common component macros
+
+#  define COMPANY_NAME "Analog Devices, Inc.\0"
+#  include "tool_version.h"
+#  define EXE_DESCRIPTION TOOL_TYPE "\0"
+#  define EXE_VERSION TOOL_VERSION "\0"
+#	define EXE_NAME TOOL_FILE "\0" 
+#  define EXE_FILENAME EXE_NAME
+#  define PRODUCT_NAME EXE_DESCRIPTION
+#	define PROD_VERSION PRODUCT_VERSION "\0"
+#	define COPYRIGHT TOOL_COPYRIGHT "\0"
+
+
+#if !defined(COPYRIGHT) || !defined(COMPANY_NAME) || \
+    !defined(EXE_DESCRIPTION) || !defined(EXE_VERSION) || \
+    !defined(PRODUCT_NAME) || !defined(EXE_NAME) || !defined(EXE_FILENAME) || \
+    !defined(PROD_VERSION)
+#  error Missing information
+#endif
+
+#define ADI_FILETYPE VFT_APP
+
+VS_VERSION_INFO     VERSIONINFO
+  FILEVERSION       TOOL_VER_2000
+  PRODUCTVERSION    5,0,6,0
+  FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS_NT_WINDOWS32
+
+#ifdef ADI_FILETYPE
+ FILETYPE ADI_FILETYPE
+ FILESUBTYPE 0x0L
+#else
+ FILETYPE VFT_UNKNOWN
+ FILESUBTYPE 0x0L
+#endif      
+
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+        BLOCK "040904B0"
+		BEGIN 
+			VALUE "CompanyName",     COMPANY_NAME
+			VALUE "FileDescription", EXE_DESCRIPTION
+			VALUE "FileVersion",     EXE_VERSION
+			VALUE "InternalName",    EXE_NAME
+         VALUE "LegalCopyright",  COPYRIGHT  
+#if defined LEGAL_TRADEMARKS
+         VALUE "LegalTrademarks", LEGAL_TRADEMARKS
+#endif
+         VALUE "OriginalFilename",EXE_FILENAME 
+#if defined PRIVATE_BUILD
+         VALUE "PrivateBuild",    PRIVATE_BUILD
+#endif      
+         VALUE "ProductName",     PRODUCT_NAME
+         VALUE "ProductVersion",  PROD_VERSION
+
+#if defined SPECIAL_BUILD
+            VALUE "SpecialBuild", SPECIAL_BUILD
+#endif                                                   
+		END
+	END
+	BLOCK "VarFileInfo" 
+	BEGIN 
+		VALUE "Translation", 0x409, 1200
+    END
+END
+

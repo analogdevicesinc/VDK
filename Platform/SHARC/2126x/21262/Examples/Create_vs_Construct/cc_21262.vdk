@@ -1,0 +1,82 @@
+[System Data]
+System.Name=System
+System.Clock Frequency (MHz)=200
+System.Tick Period (ms)=.25
+System.History Buffer Size=256
+System.Maximum Running Threads=10
+System.Instrumentation Level=Full Instrumentation
+System.Maximum Active Memory Pools=0
+System.Maximum Active Semaphores=0
+System.Maximum Messages=0
+System.Maximum Active Device Flags=0
+System.Maximum I/O Objects=20
+System.Timer Interrupt=TMZHI
+System.Semaphores Heap=system_heap
+System.I/O Objects Heap=system_heap
+System.Device Flags Heap=system_heap
+System.Messages Heap=system_heap
+[Multiprocessor Info]
+MultiProcInfo0.Name=MultiprocessorInfo
+MultiProcInfo0.Multiprocessor Messages Allowed=false
+MultiProcInfo0.Local Processor ID=0
+[Routing Threads]
+Count=0
+[Routing Nodes]
+Count=0
+[Marshalled Message Types]
+Count=0
+[Imports]
+Count=0
+[Thread Types]
+Count=2
+ThreadType0.System Defined=false
+ThreadType0.Name=factory
+ThreadType0.Priority=1
+ThreadType0.Stack Size=512
+ThreadType0.Source File=factory.cpp
+ThreadType0.Header File=factory.h
+ThreadType0.Message Enabled=false
+ThreadType0.Context Heap=system_heap
+ThreadType0.Stack Heap=system_heap
+ThreadType0.Thread Structure Heap=system_heap
+ThreadType1.System Defined=false
+ThreadType1.Name=Worker
+ThreadType1.Priority=5
+ThreadType1.Stack Size=80
+ThreadType1.Source File=Worker.cpp
+ThreadType1.Header File=Worker.h
+ThreadType1.Message Enabled=false
+ThreadType1.Context Heap=system_heap
+ThreadType1.Stack Heap=system_heap
+ThreadType1.Thread Structure Heap=system_heap
+[Boot Threads]
+Count=1
+BootThread0.System Defined=false
+BootThread0.Name=bt1
+BootThread0.Thread Type=factory
+BootThread0.Initializer=0
+[Idle Thread]
+Count=1
+IdleThread0.Name=idle
+IdleThread0.Stack Size=256
+IdleThread0.Heap=system_heap
+[Heaps]
+Count=0
+[Priorities]
+Count=0
+[Semaphores]
+Count=0
+[Events]
+Count=0
+[Event Bits]
+Count=0
+[Interrupts]
+Count=0
+[Device Drivers]
+Count=0
+[I/O Objects]
+Count=0
+[Device Flags]
+Count=0
+[Memory Pools]
+Count=0
